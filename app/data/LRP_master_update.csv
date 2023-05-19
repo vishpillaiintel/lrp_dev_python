@@ -1,0 +1,194 @@
+﻿Product,Skew,Package Type,Milestone,PO/ES0,ES1,ES2,PQS,QS,PRQ,PRQ+1Q,Submission Type,PRQ Date,Date of Submission
+Lunar Lake ,M,Client,WLA RtD,97.00%,98.25%,98.75%,,99.06%,99.38%,99.50%,Commit,2024Q2,3/17/2023
+Lunar Lake ,M,Client,WLA Test PIYL,93.40%,96.15%,97.25%,,97.94%,98.63%,98.90%,Commit,2024Q2,3/17/2023
+Lunar Lake ,M,Client,WLA Inv Yield,99.7%,99.8%,99.8%,,99.8%,99.9%,99.9%,Commit,2024Q2,3/17/2023
+Lunar Lake ,M,Client,Pkg Assemb RtD,97.60%,98.60%,99.00%,,99.25%,99.50%,99.60%,Commit,2024Q2,3/17/2023
+Lunar Lake ,M,Client,Pkg Assemb Test PIYL,98.00%,98.75%,99.00%,,99.06%,99.38%,99.50%,Commit,2024Q2,3/17/2023
+Lunar Lake ,M,Client,Pkg Assemb Finish,99.60%,99.75%,99.80%,,99.81%,99.88%,99.90%,Commit,2024Q2,3/17/2023
+Lunar Lake ,M,Client,Pkg Inv Yield,99.90%,99.95%,99.95%,,99.95%,99.95%,99.95%,Commit,2024Q2,3/17/2023
+Razor Lake,All,Client,Pkg Assemb RtD,98.80%,99.25%,99.40%,,99.55%,99.63%,99.70%,Commit,2027Q1,3/17/2023
+Razor Lake,All,Client,Pkg Assemb Test PIYL,98.40%,99.00%,99.20%,,99.40%,99.50%,99.60%,Commit,2027Q1,3/17/2023
+Razor Lake,All,Client,Pkg Assemb Finish,99.60%,99.75%,99.80%,,99.85%,99.88%,99.90%,Commit,2027Q1,3/17/2023
+Razor Lake,All,Client,Pkg Inv Yield,99.90%,99.95%,99.95%,,99.95%,99.95%,99.95%,Commit,2027Q1,3/17/2023
+Wildcat Lake,All,Client,Pkg Assemb RtD,99.20%,99.50%,99.60%,,99.70%,99.75%,99.80%,Commit,,3/17/2023
+Wildcat Lake,All,Client,Pkg Assemb Test PIYL,99.20%,99.50%,99.60%,,99.70%,99.75%,99.80%,Commit,,3/17/2023
+Wildcat Lake,All,Client,Pkg Assemb Finish,99.60%,99.75%,99.80%,,99.85%,99.88%,99.90%,Commit,,3/17/2023
+Wildcat Lake,All,Client,Pkg Inv Yield,99.90%,99.95%,99.95%,,99.95%,99.95%,99.95%,Commit,,3/17/2023
+Nova Lake,N,Client,Pkg Assemb RtD,99.20%,99.50%,99.60%,,99.70%,99.75%,99.80%,Commit,2026Q4,3/17/2023
+Nova Lake,N,Client,Pkg Assemb Test PIYL,99.20%,99.50%,99.60%,,99.70%,99.75%,99.80%,Commit,2026Q4,3/17/2023
+Nova Lake,N,Client,Pkg Assemb Finish,99.60%,99.75%,99.80%,,99.85%,99.88%,99.90%,Commit,2026Q4,3/17/2023
+Nova Lake,N,Client,Pkg Inv Yield,99.90%,99.95%,99.95%,,99.95%,99.95%,99.95%,Commit,2026Q4,3/17/2023
+Nova Lake,S,Client,Pkg Assemb RtD,99.20%,99.50%,99.60%,,99.70%,99.75%,99.80%,Commit,2026Q2,3/17/2023
+Nova Lake,S,Client,Pkg Assemb Test PIYL,99.20%,99.50%,99.60%,,99.70%,99.75%,99.80%,Commit,2026Q2,3/17/2023
+Nova Lake,S,Client,Pkg Assemb Finish,99.60%,99.75%,99.80%,,99.85%,99.88%,99.90%,Commit,2026Q2,3/17/2023
+Nova Lake,S,Client,Pkg Inv Yield,99.90%,99.95%,99.95%,,99.95%,99.95%,99.95%,Commit,2026Q2,3/17/2023
+Nova Lake,WP,Client,Pkg Assemb RtD,98.80%,99.25%,99.40%,,99.55%,99.63%,99.70%,Commit,,3/17/2023
+Nova Lake,WP,Client,Pkg Assemb Test PIYL,98.40%,99.00%,99.20%,,99.40%,99.50%,99.60%,Commit,,3/17/2023
+Nova Lake,WP,Client,Pkg Assemb Finish,99.60%,99.75%,99.80%,,99.85%,99.88%,99.90%,Commit,,3/17/2023
+Nova Lake,WP,Client,Pkg Inv Yield,99.90%,99.95%,99.95%,,99.95%,99.95%,99.95%,Commit,,3/17/2023
+Panther Lake,All,Client,WLA RtD,97.00%,98.25%,98.75%,,99.06%,99.38%,99.50%,Commit,2025Q2,3/17/2023
+Panther Lake,All,Client,WLA Test PIYL,93.40%,96.15%,97.25%,,97.94%,98.63%,98.90%,Commit,2025Q2,3/17/2023
+Panther Lake,All,Client,WLA Inv Yield,99.7%,99.8%,99.8%,,99.8%,99.9%,99.9%,Commit,2025Q2,3/17/2023
+Panther Lake,All,Client,Pkg Assemb RtD,97.60%,98.60%,99.00%,,99.25%,99.50%,99.60%,Commit,2025Q2,3/17/2023
+Panther Lake,All,Client,Pkg Assemb Test PIYL,98.00%,98.75%,99.00%,,99.06%,99.38%,99.50%,Commit,2025Q2,3/17/2023
+Panther Lake,All,Client,Pkg Assemb Finish,99.60%,99.75%,99.80%,,99.81%,99.88%,99.90%,Commit,2025Q2,3/17/2023
+Panther Lake,All,Client,Pkg Inv Yield,99.90%,99.95%,99.95%,,99.95%,99.95%,99.95%,Commit,2025Q2,3/17/2023
+Meteor Lake,M282/S681/PS682/PS281,Client,WLA RtD,97.60%,98.10%,98.50%,,98.80%,99.00%,99.50%,Commit,2024Q2,11/17/2022
+Meteor Lake,M282/S681/PS682/PS281,Client,WLA Test PIYL,96.20%,97.00%,97.40%,,97.80%,98.10%,98.70%,Commit,2024Q2,11/17/2022
+Meteor Lake,M282/S681/PS682/PS281,Client,WLA Inv Yield,99.7%,99.8%,99.8%,,99.8%,99.9%,99.9%,Commit,2024Q2,11/17/2022
+Meteor Lake,M282/S681/PS682/PS281,Client,Pkg Assemb RtD,96.60%,97.60%,98.50%,,99.20%,99.60%,99.80%,Commit,2024Q2,11/17/2022
+Meteor Lake,M282/S681/PS682/PS281,Client,Pkg Assemb Test PIYL,87.80%,93.80%,96.10%,,97.80%,99.40%,99.80%,Commit,2024Q2,11/17/2022
+Meteor Lake,M282/S681/PS682/PS281,Client,Pkg Assemb Finish,97.00%,97.90%,98.80%,,99.50%,99.90%,99.90%,Commit,2024Q2,11/17/2022
+Meteor Lake,M282/S681/PS682/PS281,Client,Pkg Inv Yield,99.90%,99.95%,99.95%,,99.95%,99.95%,99.95%,Commit,2024Q2,11/17/2022
+Meteor Lake,H682/P281,Client,WLA RtD,97.61%,98.10%,98.55%,,98.80%,99.00%,99.50%,Commit,,3/17/2023
+Meteor Lake,H682/P281,Client,WLA Test PIYL,96.22%,97.01%,97.45%,,97.80%,98.10%,98.70%,Commit,,3/17/2023
+Meteor Lake,H682/P281,Client,WLA Inv Yield,99.7%,99.8%,99.8%,,99.8%,99.9%,99.9%,Commit,,3/17/2023
+Meteor Lake,H682/P281,Client,Pkg Assemb RtD,96.55%,97.59%,98.54%,,99.25%,99.70%,99.80%,Commit,,3/17/2023
+Meteor Lake,H682/P281,Client,Pkg Assemb Test PIYL,87.78%,93.76%,96.06%,,97.75%,99.35%,99.69%,Commit,,3/17/2023
+Meteor Lake,H682/P281,Client,Pkg Assemb Finish,97.04%,97.89%,98.83%,,99.55%,99.85%,99.85%,Commit,,3/17/2023
+Meteor Lake,H682/P281,Client,Pkg Inv Yield,99.90%,99.95%,99.95%,,99.95%,99.95%,99.95%,Commit,,3/17/2023
+ARL,M/P/S,Client,WLA RtD,97.60%,98.10%,98.50%,,98.80%,99.00%,99.50%,Commit,,11/17/2022
+ARL,M/P/S,Client,WLA Test PIYL,96.20%,97.00%,97.40%,,97.80%,98.10%,98.70%,Commit,,11/17/2022
+ARL,M/P/S,Client,WLA Inv Yield,99.7%,99.8%,99.8%,,99.8%,99.9%,99.9%,Commit,,11/17/2022
+ARL,M/P/S,Client,Pkg Assemb RtD,96.60%,97.60%,98.50%,,99.20%,99.60%,99.80%,Commit,,11/17/2022
+ARL,M/P/S,Client,Pkg Assemb Test PIYL,87.80%,93.80%,96.10%,,97.80%,99.40%,99.80%,Commit,,11/17/2022
+ARL,M/P/S,Client,Pkg Assemb Finish,97.00%,97.90%,98.80%,,99.50%,99.90%,99.90%,Commit,,11/17/2022
+ARL,M/P/S,Client,Pkg Inv Yield,99.90%,99.95%,99.95%,,99.95%,99.95%,99.95%,Commit,,11/17/2022
+Sapphire Rapids,XCC,Server,Pkg Assemb RtD,,,,,99.3%,99.3%,99.3%,Commit,,11/17/2022
+Sapphire Rapids,XCC,Server,Pkg Assemb Test PIYL,,,,,97.9%,98.3%,98.9%,Commit,,11/17/2022
+Sapphire Rapids,XCC,Server,Pkg Assemb Finish,,,,,99.7%,99.7%,99.8%,Commit,,11/17/2022
+Sapphire Rapids,XCC,Server,Pkg Inv Yield,,,,,99.8%,99.9%,99.9%,Commit,,11/17/2022
+Sapphire Rapids,HBM,Server,Pkg Assemb RtD,,,98.4%,,98.5%,98.6%,98.9%,Commit,,3/17/2023
+Sapphire Rapids,HBM,Server,Pkg Assemb Test PIYL,,,97.2%,,97.8%,98.4%,98.6%,Commit,,3/17/2023
+Sapphire Rapids,HBM,Server,Pkg Assemb Finish,,,99.6%,,99.7%,99.8%,99.8%,Commit,,3/17/2023
+Sapphire Rapids,HBM,Server,Pkg Inv Yield,,,99.8%,,99.8%,99.9%,99.9%,Commit,,3/17/2023
+Emerald Rapids,XCC,Server,Pkg Assemb RtD,96.3%,,99.0%,,99.1%,99.3%,99.4%,Commit,,3/17/2023
+Emerald Rapids,XCC,Server,Pkg Assemb Test PIYL,93.0%,,98.5%,,98.8%,99.0%,99.2%,Commit,,3/17/2023
+Emerald Rapids,XCC,Server,Pkg Assemb Finish,98.7%,,99.5%,,99.6%,99.7%,99.8%,Commit,,3/17/2023
+Emerald Rapids,XCC,Server,Pkg Inv Yield,99.7%,,99.8%,,99.8%,99.9%,99.9%,Commit,,3/17/2023
+Emerald Rapids,MCC,Server,Pkg Assemb RtD,99.1%,99.2%,99.2%,,99.3%,99.4%,99.6%,Commit,,3/17/2023
+Emerald Rapids,MCC,Server,Pkg Assemb Test PIYL,98.5%,98.9%,98.9%,,99.3%,99.6%,99.8%,Commit,,3/17/2023
+Emerald Rapids,MCC,Server,Pkg Assemb Finish,99.1%,99.4%,99.4%,,99.7%,99.9%,99.9%,Commit,,3/17/2023
+Emerald Rapids,MCC,Server,Pkg Inv Yield,99.90%,99.95%,99.95%,,99.95%,99.95%,99.95%,Commit,,3/17/2023
+Sierra Forest ,LCC,Server,Pkg Assemb RtD,95.5%,97.4%,98.1%,,98.9%,99.3%,99.3%,Commit,2024Q1,3/17/2023
+Sierra Forest ,LCC,Server,Pkg Assemb Test PIYL,94.9%,97.0%,97.9%,,98.7%,99.2%,99.3%,Commit,2024Q1,3/17/2023
+Sierra Forest ,LCC,Server,Pkg Assemb Finish,98.2%,98.9%,99.2%,,99.5%,99.7%,99.8%,Commit,2024Q1,3/17/2023
+Sierra Forest ,LCC,Server,Pkg Inv Yield,99.7%,99.8%,99.8%,,99.8%,99.9%,99.9%,Commit,2024Q1,3/17/2023
+Sierra Forest ,XDCC,Server,Pkg Assemb RtD,94.6%,96.8%,97.7%,,98.6%,99.1%,99.2%,Commit,2024Q1,3/17/2023
+Sierra Forest ,XDCC,Server,Pkg Assemb Test PIYL,94.1%,96.6%,97.5%,,98.5%,99.0%,99.2%,Commit,2024Q1,3/17/2023
+Sierra Forest ,XDCC,Server,Pkg Assemb Finish,97.6%,98.6%,99.0%,,99.4%,99.6%,99.7%,Commit,2024Q1,3/17/2023
+Sierra Forest ,XDCC,Server,Pkg Inv Yield,99.7%,99.8%,99.8%,,99.8%,99.9%,99.9%,Commit,2024Q1,3/17/2023
+Sierra Forest ,1-DENS,Server,Pkg Assemb RtD,94.6%,96.8%,97.7%,,98.6%,99.1%,99.2%,Commit,2024Q1,3/17/2023
+Sierra Forest ,1-DENS,Server,Pkg Assemb Test PIYL,94.1%,96.6%,97.5%,,98.5%,99.0%,99.2%,Commit,2024Q1,3/17/2023
+Sierra Forest ,1-DENS,Server,Pkg Assemb Finish,97.6%,98.6%,99.0%,,99.4%,99.6%,99.7%,Commit,2024Q1,3/17/2023
+Sierra Forest ,1-DENS,Server,Pkg Inv Yield,99.7%,99.8%,99.8%,,99.8%,99.9%,99.9%,Commit,2024Q1,3/17/2023
+Sierra Forest ,3-DENS,Server,Pkg Assemb RtD,94.6%,96.8%,97.7%,,98.6%,99.1%,99.2%,Commit,2024Q1,3/17/2023
+Sierra Forest ,3-DENS,Server,Pkg Assemb Test PIYL,94.1%,96.6%,97.5%,,98.5%,99.0%,99.2%,Commit,2024Q1,3/17/2023
+Sierra Forest ,3-DENS,Server,Pkg Assemb Finish,97.6%,98.6%,99.0%,,99.4%,99.6%,99.7%,Commit,2024Q1,3/17/2023
+Sierra Forest ,3-DENS,Server,Pkg Inv Yield,99.7%,99.8%,99.8%,,99.8%,99.9%,99.9%,Commit,2024Q1,3/17/2023
+Granite Rapids,All workstation use case,Server,Pkg Assemb RtD,96.2%,97.7%,98.5%,,98.5%,99.2%,99.2%,Commit ,,3/17/2023
+Granite Rapids,All workstation use case,Server,Pkg Assemb Test PIYL,92.4%,95.7%,96.7%,,97.8%,99.0%,99.2%,Commit ,,3/17/2023
+Granite Rapids,All workstation use case,Server,Pkg Assemb Finish,98.7%,99.2%,99.5%,,99.5%,99.6%,99.8%,Commit ,,3/17/2023
+Granite Rapids,All workstation use case,Server,Pkg Inv Yield,99.7%,99.8%,99.8%,,99.8%,99.9%,99.9%,Commit ,,3/17/2023
+Granite Rapids,SP-XCC,Server,Pkg Assemb RtD,96.2%,97.7%,98.5%,,98.5%,99.2%,99.2%,Commit,2025Q1,3/17/2023
+Granite Rapids,SP-XCC,Server,Pkg Assemb Test PIYL,92.4%,95.7%,96.7%,,97.8%,99.0%,99.2%,Commit,2025Q1,3/17/2023
+Granite Rapids,SP-XCC,Server,Pkg Assemb Finish,98.7%,99.2%,99.5%,,99.5%,99.6%,99.8%,Commit,2025Q1,3/17/2023
+Granite Rapids,SP-XCC,Server,Pkg Inv Yield,99.7%,99.8%,99.8%,,99.8%,99.9%,99.9%,Commit,2025Q1,3/17/2023
+Granite Rapids,UCC,Server,Pkg Assemb RtD,94.9%,96.9%,97.9%,,98.0%,98.7%,98.7%,Commit,2025Q1,3/17/2023
+Granite Rapids,UCC,Server,Pkg Assemb Test PIYL,90.6%,94.7%,96.0%,,97.3%,98.8%,99.0%,Commit,2025Q1,3/17/2023
+Granite Rapids,UCC,Server,Pkg Assemb Finish,98.3%,99.0%,99.3%,,99.3%,99.8%,99.8%,Commit,2025Q1,3/17/2023
+Granite Rapids,UCC,Server,Pkg Inv Yield,99.7%,99.8%,99.8%,,99.8%,99.9%,99.9%,Commit,2025Q1,3/17/2023
+Clearwater Forest,All,Server,WLA RtD,90.9%,94.7%,96.2%,,98.5%,98.5%,98.9%,Commit,2025Q3,3/17/2023
+Clearwater Forest,All,Server,WLA Test PIYL,78.9%,87.7%,91.2%,,95.8%,96.5%,97.5%,Commit,2025Q3,3/17/2023
+Clearwater Forest,All,Server,WLA Inv Yield,99.7%,99.8%,99.8%,,99.8%,99.9%,99.9%,Commit,2025Q3,3/17/2023
+Clearwater Forest,All,Server,Pkg Assemb RtD,92.1%,95.4%,96.7%,,99.5%,98.7%,98.7%,Commit,2025Q3,3/17/2023
+Clearwater Forest,All,Server,Pkg Assemb Test PIYL,92.1%,95.4%,96.7%,,97.2%,98.7%,98.9%,Commit,2025Q3,3/17/2023
+Clearwater Forest,All,Server,Pkg Assemb Finish,98.7%,99.3%,99.5%,,99.7%,99.8%,99.8%,Commit,2025Q3,3/17/2023
+Clearwater Forest,All,Server,Pkg Inv Yield,99.7%,99.8%,99.8%,,99.8%,99.9%,99.9%,Commit,2025Q3,3/17/2023
+Diamond Rapids,XCC/HCC/LCC,Server,WLA RtD,91.0%,94.8%,96.3%,98.1%,98.1%,98.5%,98.5%,RoT,,3/17/2023
+Diamond Rapids,XCC/HCC/LCC,Server,WLA Test PIYL,78.4%,87.4%,91.0%,95.5%,95.5%,96.4%,96.4%,RoT,,3/17/2023
+Diamond Rapids,XCC/HCC/LCC,Server,WLA Inv Yield,99.7%,99.8%,99.8%,99.8%,99.8%,99.9%,99.9%,RoT,,3/17/2023
+Diamond Rapids,XCC/HCC/LCC,Server,Pkg Assemb RtD,98.4%,99.0%,99.2%,99.5%,99.5%,99.6%,99.6%,RoT,,3/17/2023
+Diamond Rapids,XCC/HCC/LCC,Server,Pkg Assemb Test PIYL,96.4%,97.8%,98.2%,98.9%,98.9%,99.1%,99.1%,RoT,,3/17/2023
+Diamond Rapids,XCC/HCC/LCC,Server,Pkg Assemb Finish,98.4%,99.0%,99.2%,99.5%,99.5%,99.6%,99.6%,RoT,,3/17/2023
+Diamond Rapids,XCC/HCC/LCC,Server,Pkg Inv Yield,99.7%,99.8%,99.8%,99.8%,99.8%,99.9%,99.9%,RoT,,3/17/2023
+Diamond Rapids ,UCC/UCC-RM,Server,WLA RtD,91.0%,94.8%,96.3%,98.1%,98.1%,98.5%,98.5%,RoT,,3/17/2023
+Diamond Rapids ,UCC/UCC-RM,Server,WLA Test PIYL,72.4%,83.9%,88.5%,94.3%,94.3%,95.4%,95.4%,RoT,,3/17/2023
+Diamond Rapids ,UCC/UCC-RM,Server,WLA Inv Yield,99.7%,99.8%,99.8%,99.8%,99.8%,99.9%,99.9%,RoT,,3/17/2023
+Diamond Rapids ,UCC/UCC-RM,Server,Pkg Assemb RtD,98.4%,99.0%,99.2%,99.5%,99.5%,99.6%,99.6%,RoT,,3/17/2023
+Diamond Rapids ,UCC/UCC-RM,Server,Pkg Assemb Test PIYL,96.4%,97.8%,98.2%,98.9%,98.9%,99.1%,99.1%,RoT,,3/17/2023
+Diamond Rapids ,UCC/UCC-RM,Server,Pkg Assemb Finish,98.4%,99.0%,99.2%,99.5%,99.5%,99.6%,99.6%,RoT,,3/17/2023
+Diamond Rapids ,UCC/UCC-RM,Server,Pkg Inv Yield,99.7%,99.8%,99.8%,99.8%,99.8%,99.9%,99.9%,RoT,,3/17/2023
+Coral Rapids,HCC/LCC,Server,WLA RtD,97.99%,98.69%,98.99%,99.19%,99.39%,99.49%,99.49%,Commit,,3/17/2023
+Coral Rapids,HCC/LCC,Server,WLA Test PIYL,93.99%,96.24%,96.99%,97.74%,98.12%,98.49%,98.49%,Commit,,3/17/2023
+Coral Rapids,HCC/LCC,Server,WLA Inv Yield,99.7%,99.8%,99.8%,99.8%,99.8%,99.9%,99.9%,Commit,,3/17/2023
+Coral Rapids,HCC/LCC,Server,Pkg Assemb RtD,95.89%,96.49%,97.69%,98.29%,98.89%,99.49%,99.49%,Commit,,3/17/2023
+Coral Rapids,HCC/LCC,Server,Pkg Assemb Test PIYL,95.19%,96.99%,97.59%,98.19%,98.49%,98.79%,98.89%,Commit,,3/17/2023
+Coral Rapids,HCC/LCC,Server,Pkg Assemb Finish,98.69%,99.19%,99.49%,99.49%,99.59%,99.79%,99.79%,Commit,,3/17/2023
+Coral Rapids,HCC/LCC,Server,Pkg Inv Yield,99.7%,99.8%,99.8%,99.8%,99.8%,99.9%,99.9%,Commit,,3/17/2023
+Coral Rapids ,XCC/ZCC/UCC,Server,WLA RtD,90.99%,94.74%,96.24%,97.74%,98.09%,98.49%,98.49%,Commit,,3/17/2023
+Coral Rapids ,XCC/ZCC/UCC,Server,WLA Test PIYL,80.79%,88.79%,91.99%,95.19%,95.99%,96.79%,96.79%,Commit,,3/17/2023
+Coral Rapids ,XCC/ZCC/UCC,Server,WLA Inv Yield,99.7%,99.8%,99.8%,99.8%,99.8%,99.9%,99.9%,Commit,,3/17/2023
+Coral Rapids ,XCC/ZCC/UCC,Server,Pkg Assemb RtD,88.89%,90.49%,93.69%,95.29%,96.89%,98.49%,98.49%,Commit,,3/17/2023
+Coral Rapids ,XCC/ZCC/UCC,Server,Pkg Assemb Test PIYL,95.19%,96.99%,97.59%,98.19%,98.49%,98.79%,98.89%,Commit,,3/17/2023
+Coral Rapids ,XCC/ZCC/UCC,Server,Pkg Assemb Finish,98.69%,99.19%,99.49%,99.49%,99.59%,99.79%,99.79%,Commit,,3/17/2023
+Coral Rapids ,XCC/ZCC/UCC,Server,Pkg Inv Yield,99.7%,99.8%,99.8%,99.8%,99.8%,99.9%,99.9%,Commit,,3/17/2023
+Rogue River Forest,All,Server,WLA RtD,90.9%,94.7%,96.2%,,98.5%,98.5%,98.9%,Commit,,3/17/2023
+Rogue River Forest,All,Server,WLA Test PIYL,78.9%,87.7%,91.2%,,95.8%,96.5%,97.5%,Commit,,3/17/2023
+Rogue River Forest,All,Server,WLA Inv Yield,99.7%,99.8%,99.8%,,99.8%,99.9%,99.9%,Commit,,3/17/2023
+Rogue River Forest,All,Server,Pkg Assemb RtD,97.1%,98.3%,98.8%,,99.0%,99.5%,99.6%,Commit,,3/17/2023
+Rogue River Forest,All,Server,Pkg Assemb Test PIYL,95.7%,97.5%,98.2%,,98.6%,99.3%,99.4%,Commit,,3/17/2023
+Rogue River Forest,All,Server,Pkg Assemb Finish,97.8%,98.7%,99.1%,,99.3%,99.6%,99.7%,Commit,,3/17/2023
+Rogue River Forest,All,Server,Pkg Inv Yield,99.7%,99.8%,99.8%,,99.8%,99.9%,99.9%,Commit,,3/17/2023
+Talladega Forest,All,Server,WLA RtD,90.9%,94.7%,96.2%,,98.5%,98.5%,98.9%,Commit,,3/17/2023
+Talladega Forest,All,Server,WLA Test PIYL,78.9%,87.7%,91.2%,,95.8%,96.5%,97.5%,Commit,,3/17/2023
+Talladega Forest,All,Server,WLA Inv Yield,99.7%,99.8%,99.8%,,99.8%,99.9%,99.9%,Commit,,3/17/2023
+Talladega Forest,All,Server,Pkg Assemb RtD,97.1%,98.3%,98.8%,,99.0%,99.5%,99.6%,Commit,,3/17/2023
+Talladega Forest,All,Server,Pkg Assemb Test PIYL,95.7%,97.5%,98.2%,,98.6%,99.3%,99.4%,Commit,,3/17/2023
+Talladega Forest,All,Server,Pkg Assemb Finish,97.8%,98.7%,99.1%,,99.3%,99.6%,99.7%,Commit,,3/17/2023
+Talladega Forest,All,Server,Pkg Inv Yield,99.7%,99.8%,99.8%,,99.8%,99.9%,99.9%,Commit,,3/17/2023
+Garuda Shores,All,Graphics,WLA RtD,98.0%,98.8%,99.0%,,99.3%,99.5%,99.5%,RoT,2026Q3,3/17/2023
+Garuda Shores,All,Graphics,WLA Test PIYL,91.6%,94.8%,95.8%,,96.9%,97.90%,97.90%,RoT,2026Q3,3/17/2023
+Garuda Shores,All,Graphics,WLA Inv Yield,99.7%,99.8%,99.8%,,99.8%,99.9%,99.9%,RoT,2026Q3,3/17/2023
+Garuda Shores,All,Graphics,Pkg Assemb RtD,96.8%,98.0%,98.4%,,98.8%,99.2%,99.2%,RoT,2026Q3,3/17/2023
+Garuda Shores,All,Graphics,Pkg Assemb Test PIYL,97.6%,98.5%,98.8%,,99.1%,99.4%,99.4%,RoT,2026Q3,3/17/2023
+Garuda Shores,All,Graphics,Pkg Assemb Finish,98.8%,99.3%,99.4%,,99.6%,99.7%,99.7%,RoT,2026Q3,3/17/2023
+Garuda Shores,All,Graphics,Pkg Inv Yield,99.70%,99.80%,99.80%,,99.80%,99.90%,99.90%,RoT,2026Q3,3/17/2023
+Alum Rock,All ,Graphics,Pkg Assemb RtD,95.6%,97.3%,97.8%,,98.4%,98.9%,98.9%,RoT,2024Q4,3/17/2023
+Alum Rock,All ,Graphics,Pkg Assemb Test PIYL,96.6%,97.9%,98.3%,,98.7%,99.2%,99.2%,RoT,2024Q4,3/17/2023
+Alum Rock,All ,Graphics,Pkg Assemb Finish,99.2%,99.5%,99.6%,,99.7%,99.8%,99.8%,RoT,2024Q4,3/17/2023
+Alum Rock,All ,Graphics,Pkg Inv Yield,99.7%,99.8%,99.8%,,99.8%,99.9%,99.9%,RoT,2024Q4,3/17/2023
+Celestial,All,Graphics,WLA RtD,98.5%,98.6%,98.7%,,98.8%,98.8%,99.0%,Commit,,11/17/2022
+Celestial,All,Graphics,WLA Test PIYL,95.8%,96.2%,96.4%,,96.5%,97.2%,97.8%,Commit,,11/17/2022
+Celestial,All,Graphics,WLA Inv Yield,99.7%,99.8%,99.8%,,99.8%,99.9%,99.9%,Commit,,11/17/2022
+Celestial,All,Graphics,Pkg Assemb RtD,98.5%,99.1%,99.4%,,99.5%,99.8%,99.8%,Commit,,11/17/2022
+Celestial,All,Graphics,Pkg Assemb Test PIYL,88.0%,94.5%,96.4%,,97.5%,99.0%,99.2%,Commit,,11/17/2022
+Celestial,All,Graphics,Pkg Assemb Finish,99.4%,99.4%,99.6%,,99.7%,99.9%,99.9%,Commit,,11/17/2022
+Celestial,All,Graphics,Pkg Inv Yield,99.7%,99.8%,99.8%,,99.8%,99.9%,99.9%,Commit,,11/17/2022
+Roseland ,HCC/LCC,ASIC,Pkg Assemb RtD,98.4%,99.0%,99.2%,,99.4%,99.6%,99.6%,RoT,,3/17/2023
+Roseland ,HCC/LCC,ASIC,Pkg Assemb Test PIYL,99.2%,99.5%,99.6%,,99.7%,99.8%,99.8%,RoT,,3/17/2023
+Roseland ,HCC/LCC,ASIC,Pkg Assemb Finish,99.2%,99.5%,99.6%,,99.7%,99.8%,99.8%,RoT,,3/17/2023
+Roseland ,HCC/LCC,ASIC,Pkg Inv Yield,99.90%,99.95%,99.95%,,99.95%,99.95%,99.95%,RoT,,3/17/2023
+Roseland ,XCC,ASIC,Pkg Assemb RtD,98.8%,99.3%,99.4%,,99.6%,99.7%,99.7%,RoT,,3/17/2023
+Roseland ,XCC,ASIC,Pkg Assemb Test PIYL,99.2%,99.5%,99.6%,,99.7%,99.8%,99.8%,RoT,,3/17/2023
+Roseland ,XCC,ASIC,Pkg Assemb Finish,99.2%,99.5%,99.6%,,99.7%,99.8%,99.8%,RoT,,3/17/2023
+Roseland ,XCC,ASIC,Pkg Inv Yield,99.90%,99.95%,99.95%,,99.95%,99.95%,99.95%,RoT,,3/17/2023
+Falcon Mesa,All ,PSG,Pkg Assemb RtD,98.0%,98.8%,99.0%,,99.3%,99.5%,99.5%,RoT,2024Q2,3/17/2023
+Falcon Mesa,All ,PSG,Pkg Assemb Test PIYL,97.6%,98.5%,98.8%,,99.1%,99.4%,99.4%,RoT,2024Q2,3/17/2023
+Falcon Mesa,All ,PSG,Pkg Assemb Finish,99.6%,99.8%,99.8%,,99.9%,99.9%,99.9%,RoT,2024Q2,3/17/2023
+Falcon Mesa,All ,PSG,Pkg Inv Yield,99.7%,99.8%,99.8%,,99.8%,99.9%,99.9%,RoT,2024Q2,3/17/2023
+Falcon Park,9,PSG,Pkg Assemb RtD,90.4%,94.4%,94.4%,,94.4%,96.0%,,Commit,2024Q3,3/17/2023
+Falcon Park,9,PSG,Pkg Assemb Test PIYL,79.6%,88.1%,88.1%,,88.1%,91.5%,,Commit,2024Q3,3/17/2023
+Falcon Park,9,PSG,Pkg Assemb Finish,95.2%,97.2%,97.2%,,97.2%,98.0%,,Commit,2024Q3,3/17/2023
+Falcon Park,9,PSG,Pkg Inv Yield,99.7%,99.8%,99.8%,,99.8%,99.9%,,Commit,2024Q3,3/17/2023
+Liberty Park,All,PSG,Pkg Assemb RtD,98.8%,99.3%,99.4%,,99.6%,99.7%,99.7%,RoT,,3/17/2023
+Liberty Park,All,PSG,Pkg Assemb Test PIYL,99.6%,99.8%,99.8%,,99.9%,99.9%,99.9%,RoT,,3/17/2023
+Liberty Park,All,PSG,Pkg Assemb Finish,99.6%,99.8%,99.8%,,99.9%,99.9%,99.9%,RoT,,3/17/2023
+Liberty Park,All,PSG,Pkg Inv Yield,99.90%,99.95%,99.95%,,99.95%,99.95%,99.95%,RoT,,3/17/2023
+Kinutsa Mesa,All,PSG,WLA RtD,98.0%,98.8%,99.0%,,99.3%,99.5%,99.5%,RoT,,3/17/2023
+Kinutsa Mesa,All,PSG,WLA Test PIYL,96.4%,97.8%,98.2%,,98.7%,99.1%,99.1%,RoT,,3/17/2023
+Kinutsa Mesa,All,PSG,WLA Inv Yield,99.7%,99.8%,99.8%,,99.8%,99.9%,99.9%,RoT,,3/17/2023
+Kinutsa Mesa,All,PSG,Pkg Assemb RtD,98.8%,99.3%,99.4%,,99.6%,99.7%,99.7%,RoT,,3/17/2023
+Kinutsa Mesa,All,PSG,Pkg Assemb Test PIYL,99.2%,99.5%,99.6%,,99.7%,99.8%,99.8%,RoT,,3/17/2023
+Kinutsa Mesa,All,PSG,Pkg Assemb Finish,99.6%,99.8%,99.8%,,99.9%,99.9%,99.9%,RoT,,3/17/2023
+Kinutsa Mesa,All,PSG,Pkg Inv Yield,99.7%,99.8%,99.8%,,99.8%,99.9%,99.9%,RoT,,3/17/2023
