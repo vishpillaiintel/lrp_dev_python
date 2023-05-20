@@ -3,7 +3,11 @@ import os
 import pandas as pd
 import numpy as np
 import mysql.connector
+import random
 from dotenv import load_dotenv
+import config
+from datetime import datetime
+
 
 load_dotenv()
 
@@ -70,107 +74,297 @@ class LRP_Model:
 
 class Submission():
     def __init__(self):
-        field_values_dict = None
-        field_values_db = None
-        form = None
-        user_id = None
-        submission_status = None
-        submission_date = None
-        submission_id = None
+        self.field_values_dict = None
+        self.field_values_db = None
+        self.form = None
+        self.user_id = None
+        self.submission_status = None
+        self.submission_date = None
+        self.submission_id = None
+        self.db_config =  {
+            'host': f"{os.environ.get('host')}",
+            'port': f"{os.environ.get('portnum')}",
+            'user':f"{os.environ.get('user')}",
+            'passwd':f"{os.environ.get('passwd')}",
+            'db':f"{os.environ.get('db')}"
+        }
 
-    def set_Submission_Attributes(self):
-        # set field values dict based on inputs, form object based on input, user_id, submission status, and submission date (timestamp)
-        pass
+    def set_Submission_Attributes(self, user_id, form_name, field_values_dict):
+
+        self.field_values_dict = field_values_dict
+        self.create_Form(form_name)
+        self.user_id = user_id
+        self.submission_status = 'Pending'
+        self.set_Submission_ID()
+        self.submission_date = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
     
-    def create_Form(self):
-        # creates Form object
-        pass
+    def set_Submission_ID(self):
+        table_name = 'Form_Submissions'
+        column_name = 'SubmissionID'
+        sql = f"""
+            SELECT 
+                {column_name} 
+            FROM 
+                {table_name}
+        """
+        with Database(self.db_config) as db_conn:
+            df = db_conn.get_row(sql)
+        
+        id = random.randint(111111, 999999, 6)
+        
+        while id not in df[column_name]:
+            id = random.randint(111111, 999999, 6)
+
+        self.submission_id = id
+
+
+    def create_Form(self, form_name):
+        # set form based on user input of form name
+        self.form = Form(form_name)
+        self.form = self.form.get_Form_Attributes()
     
     def publish_Submission(self):
-        # send to database, calls create_FieldValues_db() 
-        pass
-    
-    def reset_Submission_Status(self):
-        # resets SubmissionStatus.
-        pass
-    
-    def retrieve_Form(self):
-        # inputs: SubmissionID
-        pass
 
-    def retrieve_Submission_Attributes(self):
+        # send to database, insert into Form_Submissions
+        with Database(self.db_config) as db_conn:
+            mycursor = db_conn.cursor()
+            table = 'Form_Submissions'
+            sql = f"INSERT INTO {table} (SubmissionID, UserID, SubmissionDate, SubmissionStatus, FormID) VALUES (%s, %s, %s, %s, %s)"
+            val = (self.submission_id, self.user_id, self.submission_date, self.submission_status, self.form.form_id)
+            mycursor.execute(sql, val)
+            db_conn.commit()
+            print(f'{mycursor.rowcount} record inserted into {table}.')
+        
+        # send to database, insert into Submission_Fields 
+        with Database(self.db_config) as db_conn:
+            mycursor = db_conn.cursor()
+            table = 'Submission_Fields'
+            sql = f"INSERT INTO {table} (SubmissionID, FieldValue) VALUES (%s, %s)"
+            val = (self.submission_id, self.field_values_db)
+            mycursor.execute(sql, val)
+            db_conn.commit()
+            print(f'{mycursor.rowcount} record inserted into {table}.')
+
+    
+    def reset_Submission_Status(self, status):
+        # resets SubmissionStatus.
+        self.submission_status = status
+    
+    def retrieve_Form(self, form_id_value):
+        form_id = 'FormID'
+        table_name = 'Forms'
+        form_name = 'FormName'
+        sql = f"""
+            SELECT 
+                {form_name}
+            FROM 
+                {table_name}
+            WHERE
+                {form_id} = '{form_id_value}'
+        """
+        with Database(self.db_config) as db_conn:
+            df = db_conn.get_row(sql)
+        
+        self.form = Form(form_name=df[form_name])
+        self.form = self.form.get_Form_Attributes()
+
+    def retrieve_Submission_Attributes(self, id):
         # get all attributes from database. calls retrieve_Form, and parse_FieldValues_db().
-        pass
+        self.submission_id = id
+        table_name = 'Form_Submissions'
+        submission_id = 'SubmissionID'
+        sql = f"""
+            SELECT 
+                *
+            FROM 
+                {table_name}
+            WHERE
+                {submission_id} = '{self.submission_id}'
+        """
+        with Database(self.db_config) as db_conn:
+            df = db_conn.get_row(sql)
+        
+        self.retrieve_Form(form_id_value=df['FormID'])
+        self.submission_date = df['SubmissionDate']
+        self.submission_status = df['SubmissionStatus'] 
+        self.user_id = df['UserID']
+        self.parse_FieldValues_db()
 
     def parse_FieldValues_db(self):
         # parse Field Values string based on "," and "=". Create FieldValues dict.
-        pass
+        self.submission_id = id
+        table_name = 'Submission_Fields'
+        submission_id = 'SubmissionID'
+        sql = f"""
+            SELECT 
+                *
+            FROM 
+                {table_name}
+            WHERE
+                {submission_id} = '{self.submission_id}'
+        """
+        with Database(self.db_config) as db_conn:
+            df = db_conn.get_row(sql)
+
+        split_attrs = df['FieldValue'].split(', ')
+        attr_keys = []
+        attr_values = []
+        for attribute in split_attrs:
+            attr_keys.append(attribute.split('=')[0])
+            attr_values.append(attribute.split('=')[1])
+
+        self.field_values_dict = dict(zip(attr_keys, attr_values))  
+
+    def create_FieldValues_db(self):
+        # create Field Values string based on "," and "=" using already created FieldValues dict.
+        fv_db = ''
+        for key, value in self.field_values_dict.items():
+            if key != next(reversed(self.field_values_dict.keys())):
+                fv_db += key + "=" + value + ", "
+            else:
+                fv_db += key + "=" + value
+        
+        self.field_values_db = fv_db
 
 class Approval(Submission):
     def __init__(self):
-        approval_date = None
-        approval_id = None
-        approver_id = None
-        submission_id = None
+        self.db_config =  {
+            'host': f"{os.environ.get('host')}",
+            'port': f"{os.environ.get('portnum')}",
+            'user':f"{os.environ.get('user')}",
+            'passwd':f"{os.environ.get('passwd')}",
+            'db':f"{os.environ.get('db')}"
+        }
+        self.approval_date = None
+        self.approval_id = None
+        self.approver_id = None
+        self.submission_id = None
         
     def set_Approval_Attributes(self, submission_id, user_id):
-        self.submission_id = submission_id
+        # set Approval info given submission_id and user_id (approver/admin)
         self.approver_id = user_id
-        # approvalID = random int, approval_date = timestamp 
-    
+        self.approval_id = self.set_Approval_ID()
+        self.approval_date = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
+        self.retrieve_Submission_Attributes(submission_id)
+
+    def set_Approval_ID(self):
+        table_name = 'Approvals'
+        column_name = 'ApprovalID'
+        sql = f"""
+            SELECT 
+                {column_name} 
+            FROM 
+                {table_name}
+        """
+        with Database(self.db_config) as db_conn:
+            df = db_conn.get_row(sql)
+        
+        id = random.randint(111111, 999999, 6)
+        
+        while id not in df['ApprovalID']:
+            id = random.randint(111111, 999999, 6)
+
+        self.approval_id = id
+
     def publish_Approval(self):
+        
         # send to Approvals table AND reset_Submission_Status(self):
-        pass
+        self.reset_Submission_Status(status='Approved')
+        
+        # first, reset submission status to approved in Form_Submissions
+        with Database(self.db_config) as db_conn:
+            mycursor = db_conn.cursor()
+            table = 'Form_Submissions'
+            submission_status = 'SubmissionStatus'
+            submission_id = 'SubmissionID'
+            sql = f"UPDATE {table} SET {submission_status} = '{self.submission_status}' WHERE {submission_id} = '{self.submission_id}'"
+            mycursor.execute(sql)
+            db_conn.commit()
+            print(f'{mycursor.rowcount} record updated in {table}.')
+        
+        # next, insert new approval record into Approvals 
+        with Database(self.db_config) as db_conn:
+            mycursor = db_conn.cursor()
+            table = 'Approvals'
+            sql = f"INSERT INTO {table} (ApprovalID, ApproverID, ApprovalDate, SubmissionID) VALUES (%s, %s, %s, %s)"
+            val = (self.approval_id, self.approver_id, self.approval_date, self.submission_id)
+            mycursor.execute(sql, val)
+            db_conn.commit()
+            print(f'{mycursor.rowcount} record inserted into {table}.')
+        
+
+    def retrieve_Approval_Attributes(self, id):
+        # retrieve Approval info assuming Approval has been created in database
+        self.approval_id = id
+        table_name = 'Approvals'
+        approval_id = 'Approval_ID'
+        sql = f"""
+            SELECT 
+                * 
+            FROM 
+                {table_name}
+            WHERE
+                {approval_id} = '{self.approval_id}'
+        """
+        with Database(self.db_config) as db_conn:
+            df = db_conn.get_row(sql)
+
+        self.approver_id = df['ApproverID']
+        self.submission_id = df['SubmissionID']
+        self.approval_date = df['ApprovalDate']
+        self.retrieve_Submission_Attributes(self.submission_id)
 
     def create_Approval_Quarter(self):
+        
         # utilize approval_date to create approval quarter, return approval quarter
         pass
 
 
 class Form():
-    def __init__(self):
-        fields = None
-        form_id = None
-        form_name = None
-        form_description = None
-        form_type = None
+    def __init__(self, form_name):
+        self.db_config =  {
+            'host': f"{os.environ.get('host')}",
+            'port': f"{os.environ.get('portnum')}",
+            'user':f"{os.environ.get('user')}",
+            'passwd':f"{os.environ.get('passwd')}",
+            'db':f"{os.environ.get('db')}"
+        }
+        self.fields = None
+        self.form_id = None
+        self.form_description = None
+    
+        if 'RoT' in form_name:
+            self.form_name = 'RoT - Q2 2023'
+        else:
+            self.form_name = 'Manual Entry - Q2 2023'
 
     def get_Form_Attributes(self):
-        pass
+        table_name = 'Forms'
+        form = self.form_name
+        sql = f"""
+            SELECT 
+                * 
+            FROM 
+                {table_name}
+            WHERE
+                FormName = '{form}'
+        """
+        with Database(self.db_config) as db_conn:
+            df = db_conn.get_row(sql)
 
-    def get_Fields(self):
-        pass
+        self.form_id = df['FormID']
+        self.form_description = df['FormDescription']
+        self.set_Fields()
+        return self
 
-class Field():
-    def __init__(self):
-        field_name = None
-        field_id = None
-        field_question = None
-        field_type = None
-        field_selection = None
-        field_required = None
-        form_id = None
-
-    def set_config(self):
-        # get field_name, field_id, field_question, field_type, field_selection, field_required
-        pass
-
-    def get_Field(self, field_id, form_id):
-        self.field_id = field_id
-        self.form_id = form_id
-
-        pass
-        # SQL.... get field from Form_Fields, utilize get_field_selection and get_field_question
-
-    def get_Field_Selection(self):
-        # get from config file
-        pass
-
-    def get_Field_Question(self):
-        # get from config file
-        pass
-
+    def set_Fields(self):
+        if self.form_type == 'rot':
+            self.fields = config.rot_config
+        else:
+            self.fields = config.manual_entry_config
     
+    def get_Field_Attribute(self, field_name, field_attribute):
+        return self.fields[f'{field_name}'][f'{field_attribute}']
 
         
 

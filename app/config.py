@@ -1,7 +1,7 @@
 # Config files for RoT and ManEntry Forms  
 # get field_name, field_id, field_question, field_type, field_selection, field_required
 
-rot = {
+rot_config = {
     'Product_Name': {
         'Field_ID': 5810001,
         'Field_Type': str,
@@ -147,7 +147,7 @@ rot = {
     }
 }
 
-manual_entry = {
+manual_entry_config = {
     'Product_Name': {
         'Field_ID': 9620264,
         'Field_Type': str,
