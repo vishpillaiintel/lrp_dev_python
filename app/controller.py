@@ -26,21 +26,8 @@ new_title = '<p style="color:#333333; font-size: 28px; text-align:center;">ATTD 
 st.sidebar.markdown(new_title, unsafe_allow_html=True)
 
 
-@st.cache_data(show_spinner="Fetching data...")
-def get_lrp_data():  
-    lrp_m = model.LRP_Model()
-    df = lrp_m.get_data_csv()
-    return df
-
-def get_db_data():
-    lrp_m2 = model.LRP_Model()
-    
-    df = lrp_m2.get_data(table_name='Forms')
-    return df
-
-df = get_lrp_data()
-form = model.Form(form_name='RoT')
-form.get_Form_Attributes()
+lrp_m = model.LRP_Model()
+lrp_m.get_data()
 
 
 

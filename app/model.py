@@ -55,8 +55,10 @@ class LRP_Model:
             'passwd':f"{os.environ.get('passwd')}",
             'db':f"{os.environ.get('db')}"
         }
-    
-    def get_data(self, table_name):
+        self.approvals = []
+
+    def get_data(self):
+        table_name = 'Approvals'
         sql = f"""
             SELECT 
                 * 
@@ -65,11 +67,67 @@ class LRP_Model:
         """
         with Database(self.db_config) as db_conn:
             df = db_conn.get_row(sql)
-            return df
         
-    def get_data_csv(self):
-        df = pd.read_csv('data/LRP_master_update.csv')
-        return df
+        approvals = []
+
+        for a in df.itertuples():
+            approv = Approval()
+            approv.approval_id = a.ApprovalID 
+            approv.approval_date = a.ApprovalDate
+            approv.submission_id = a.SubmissionID
+            approv.approver_id = a.ApproverID
+            approv.retrieve_Submission_Attributes()
+            approvals.append(approv)
+
+        self.approvals = approvals
+
+    def create_LRP_master(self):
+        
+        # get data from DB and create approval objects as class attribute
+        self.get_data()
+        
+        # initialize dataframe
+        lrp_master = pd.DataFrame(columns=["Product Name", "Skew Name", "Package Type", "Milestone", "PO/ES0", "ES1", "ES2", "PQS", "QS", "PRQ", "PRQ+1Q"])
+        loc_index = 0
+
+        # iterate through approvals and add to LRP master dataframe
+        for approval in self.approvals:
+            self.append_master(approval.field_values_dict, lrp_master, loc_index)
+    
+
+    def append_master(self, fv, master_table, index):
+        
+        # utilizing product, skew, package, and milestone values -> create local df and append to master
+        product_name = fv['Product_Name']
+        skew_name = fv['Skew_Name']
+        package_type = fv['Package_Type']
+        wla = 0
+        for key in fv.keys():
+            if (';' in key) and ('WLA' in key):
+                wla = 1
+                break
+
+        if wla:
+            milestone_order = ['WLA_RtD', 'WLA_Test_PIYL','WLA_Inv_Yield','Pkg_Assemb_RtD','Pkg_Assemb_Test_PIYL','Pkg_Assemb_Finish','Pkg_Inv_Yield']
+        else:
+            milestone_order = ['Pkg_Assemb_RtD','Pkg_Assemb_Test_PIYL','Pkg_Assemb_Finish','Pkg_Inv_Yield']
+
+        for milestone in milestone_order:
+            master_table.loc[index] = [product_name, skew_name, package_type, milestone, \
+                                fv[self.idx_milestone(milestone, 0)], fv[self.idx_milestone(milestone, 1)], \
+                                fv[self.idx_milestone(milestone, 2)], fv[self.idx_milestone(milestone, 3)], \
+                                fv[self.idx_milestone(milestone, 4)], fv[self.idx_milestone(milestone, 5)], \
+                                fv[self.idx_milestone(milestone, 6)]] 
+            index+=1
+        return master_table, index
+
+    def idx_milestone(milestone, prq_timeline_i):
+        
+        # utilize prq_timeline id and create index for access to milestone values (semi-colon is a critical component)
+        prq_timeline_order = ['P0/ES0', 'ES1', 'ES2', 'QS', 'PQS', 'PRQ', 'PRQ+1Q']
+        index = milestone + ';' + prq_timeline_order[prq_timeline_i]
+            
+        return index
 
 
 class Submission():
