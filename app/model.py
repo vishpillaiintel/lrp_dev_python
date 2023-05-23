@@ -76,7 +76,7 @@ class LRP_Model:
             approv.approval_date = a.ApprovalDate
             approv.submission_id = a.SubmissionID
             approv.approver_id = a.ApproverID
-            approv.retrieve_Submission_Attributes()
+            approv.retrieve_Submission_Attributes(id=approv.submission_id)
             approvals.append(approv)
 
         self.approvals = approvals
@@ -87,15 +87,18 @@ class LRP_Model:
         self.get_data()
         
         # initialize dataframe
-        lrp_master = pd.DataFrame(columns=["Product Name", "Skew Name", "Package Type", "Milestone", "PO/ES0", "ES1", "ES2", "PQS", "QS", "PRQ", "PRQ+1Q"])
+        lrp_master = pd.DataFrame(columns=["Product Name", "Skew Name", "Package Type", "Milestone", "PO/ES0",  \
+                                           "ES1", "ES2", "PQS", "QS", "PRQ", "PRQ+1Q", "Submission Type", "Date of Submission"])
         loc_index = 0
 
         # iterate through approvals and add to LRP master dataframe
         for approval in self.approvals:
-            self.append_master(approval.field_values_dict, lrp_master, loc_index)
+            lrp_master, loc_index = self.append_master(approval.field_values_dict, lrp_master, loc_index, approval.form.form_name, approval.submission_date)
+        
+        self.master = lrp_master
     
 
-    def append_master(self, fv, master_table, index):
+    def append_master(self, fv, master_table, index, submission_type, submission_date):
         
         # utilizing product, skew, package, and milestone values -> create local df and append to master
         product_name = fv['Product_Name']
@@ -108,7 +111,8 @@ class LRP_Model:
                 break
 
         if wla:
-            milestone_order = ['WLA_RtD', 'WLA_Test_PIYL','WLA_Inv_Yield','Pkg_Assemb_RtD','Pkg_Assemb_Test_PIYL','Pkg_Assemb_Finish','Pkg_Inv_Yield']
+            milestone_order = ['WLA_RtD', 'WLA_Test_PIYL','WLA_Inv_Yield','Pkg_Assemb_RtD', \
+                               'Pkg_Assemb_Test_PIYL','Pkg_Assemb_Finish','Pkg_Inv_Yield']
         else:
             milestone_order = ['Pkg_Assemb_RtD','Pkg_Assemb_Test_PIYL','Pkg_Assemb_Finish','Pkg_Inv_Yield']
 
@@ -117,7 +121,7 @@ class LRP_Model:
                                 fv[self.idx_milestone(milestone, 0)], fv[self.idx_milestone(milestone, 1)], \
                                 fv[self.idx_milestone(milestone, 2)], fv[self.idx_milestone(milestone, 3)], \
                                 fv[self.idx_milestone(milestone, 4)], fv[self.idx_milestone(milestone, 5)], \
-                                fv[self.idx_milestone(milestone, 6)]] 
+                                fv[self.idx_milestone(milestone, 6)], submission_type, submission_date]
             index+=1
         return master_table, index
 
@@ -129,6 +133,18 @@ class LRP_Model:
             
         return index
 
+class Data_Entry_Model():
+    def __init__(self):
+        self.submission = Submission()
+        self.rot_model = RoT_Model()
+        self.me_model = Manual_Entry_Model()
+
+    def lrp_prediction(self, fields):
+        self.lrp_prediction = self.model.lrp_prediction(fields)
+        return self.lrp_prediction()
+    
+    def send_to_Database(self):
+        pass
 
 class Submission():
     def __init__(self):
@@ -147,10 +163,10 @@ class Submission():
             'db':f"{os.environ.get('db')}"
         }
 
-    def set_Submission_Attributes(self, user_id, form_name, field_values_dict):
+    def set_Submission_Attributes(self, user_id, field_values_dict):
 
         self.field_values_dict = field_values_dict
-        self.create_Form(form_name)
+        self.create_FieldValues_db()
         self.user_id = user_id
         self.submission_status = 'Pending'
         self.set_Submission_ID()
@@ -168,10 +184,10 @@ class Submission():
         with Database(self.db_config) as db_conn:
             df = db_conn.get_row(sql)
         
-        id = random.randint(111111, 999999, 6)
+        id = random.randint(111111, 999999)
         
-        while id not in df[column_name]:
-            id = random.randint(111111, 999999, 6)
+        while id in df[column_name]:
+            id = random.randint(111111, 999999)
 
         self.submission_id = id
 
@@ -182,27 +198,28 @@ class Submission():
         self.form = self.form.get_Form_Attributes()
     
     def publish_Submission(self):
-
+        output_record = ''
         # send to database, insert into Form_Submissions
         with Database(self.db_config) as db_conn:
-            mycursor = db_conn.cursor()
+            mycursor = db_conn.db_cursor
             table = 'Form_Submissions'
             sql = f"INSERT INTO {table} (SubmissionID, UserID, SubmissionDate, SubmissionStatus, FormID) VALUES (%s, %s, %s, %s, %s)"
-            val = (self.submission_id, self.user_id, self.submission_date, self.submission_status, self.form.form_id)
+            val = (str(self.submission_id), str(self.user_id), str(self.submission_date), str(self.submission_status), str(self.form.form_id))
             mycursor.execute(sql, val)
-            db_conn.commit()
-            print(f'{mycursor.rowcount} record inserted into {table}.')
+            db_conn.db_conn.commit()
+            output_record+=f'{mycursor.rowcount} record inserted into {table}.\n'
         
         # send to database, insert into Submission_Fields 
         with Database(self.db_config) as db_conn:
-            mycursor = db_conn.cursor()
+            mycursor = db_conn.db_cursor
             table = 'Submission_Fields'
             sql = f"INSERT INTO {table} (SubmissionID, FieldValue) VALUES (%s, %s)"
-            val = (self.submission_id, self.field_values_db)
+            val = (str(self.submission_id), str(self.field_values_db))
             mycursor.execute(sql, val)
-            db_conn.commit()
-            print(f'{mycursor.rowcount} record inserted into {table}.')
+            db_conn.db_conn.commit()
+            output_record+=f'{mycursor.rowcount} record inserted into {table}.\n'
 
+        return output_record
     
     def reset_Submission_Status(self, status):
         # resets SubmissionStatus.
@@ -276,12 +293,12 @@ class Submission():
     def create_FieldValues_db(self):
         # create Field Values string based on "," and "=" using already created FieldValues dict.
         fv_db = ''
+        print('ok fv')
         for key, value in self.field_values_dict.items():
             if key != next(reversed(self.field_values_dict.keys())):
-                fv_db += key + "=" + value + ", "
+                fv_db += str(key) + "=" + str(value) + ", "
             else:
-                fv_db += key + "=" + value
-        
+                fv_db += str(key) + "=" + str(value)
         self.field_values_db = fv_db
 
 class Approval(Submission):
@@ -317,10 +334,10 @@ class Approval(Submission):
         with Database(self.db_config) as db_conn:
             df = db_conn.get_row(sql)
         
-        id = random.randint(111111, 999999, 6)
+        id = random.randint(111111, 999999)
         
-        while id not in df['ApprovalID']:
-            id = random.randint(111111, 999999, 6)
+        while id in df['ApprovalID']:
+            id = random.randint(111111, 999999)
 
         self.approval_id = id
 
@@ -331,7 +348,7 @@ class Approval(Submission):
         
         # first, reset submission status to approved in Form_Submissions
         with Database(self.db_config) as db_conn:
-            mycursor = db_conn.cursor()
+            mycursor = db_conn.db_cursor()
             table = 'Form_Submissions'
             submission_status = 'SubmissionStatus'
             submission_id = 'SubmissionID'
@@ -416,7 +433,7 @@ class Form():
         return self
 
     def set_Fields(self):
-        if self.form_type == 'rot':
+        if 'RoT' in self.form_name:
             self.fields = config.rot_config
         else:
             self.fields = config.manual_entry_config
@@ -459,6 +476,7 @@ class RoT_Model:
         self.architecture_maturity_selection = ["Client - evolutionary", "Server - evolutionary", \
                                                  "Client - revolutionary",  "Server - revolutionary"]
 
+        self.lrp_output = {}
 
     # output functions
 
@@ -707,12 +725,12 @@ class RoT_Model:
         self.architecture_maturity_input = self.architecture_maturity_selection.index(architecture_maturity_val) + 1        
 
 
-    def lrp_prediction(self, chiplet_num, pkg_type, main_num, exist_emib, point_pkg, lifetime_vol_input_val, \
+    def lrp_prediction(self, product_name, skew_name, chiplet_num, pkg_class, pkg_type, main_num, exist_emib, point_pkg, lifetime_vol_input_val, \
            wla_architect, dow_architect_input_val, odi_chiplet_size, hbi_architect, signal_area_hbi, \
            exist_hbm_input_val, die_architect_input_val, type_num_satellite_input_val, \
            architecture_maturity_val):
         
-        self.get_index(pkg_type, exist_emib, point_pkg, lifetime_vol_input_val, \
+        self.get_index(pkg_type, exist_emib, point_pkg, lifetime_vol_input_val, 
            wla_architect, dow_architect_input_val, odi_chiplet_size, hbi_architect, \
            exist_hbm_input_val, die_architect_input_val, architecture_maturity_val)
         
@@ -745,9 +763,41 @@ class RoT_Model:
             loss.loc[len(loss.index)] = multiplier*pkgassy_test
             result = loss.apply(lambda x: 100 - x)
             result.index = ["WLA RtD", "WLA Test PIYL", "Pkg Assemb RtD", "Pkg Assemb Test PIYL", "Pkg Assemb Finish"]
-             
-        return result
+        
+        self.lrp_output['Product_Name'] = product_name
+        self.lrp_output['Skew_Name'] = skew_name
+        self.lrp_output['Package_Type'] = pkg_class
+        self.lrp_output['Package_Type_Estimation'] = pkg_type
+        self.lrp_output['Exist_EMIB'] = exist_emib
+        self.lrp_output['Exist_POINT'] = point_pkg
+        self.lrp_output['WLA_Architecture'] = wla_architect
+        self.lrp_output['Number_of_Chiplet_Base_Die'] = chiplet_num
+        self.lrp_output['DoW_Architecture'] = dow_architect_input_val
+        self.lrp_output['ODI_Chiplet_Size'] = odi_chiplet_size
+        self.lrp_output['HBI_Architecture'] = hbi_architect
+        self.lrp_output['Signal_Area'] = signal_area_hbi
+        self.lrp_output['Die_Architecture_Summary'] = die_architect_input_val
+        self.lrp_output['Number_of_Satellite_Die'] = type_num_satellite_input_val
+        self.lrp_output['Exist_HBM'] = exist_hbm_input_val
+        self.lrp_output['Lifetime_Volume'] = lifetime_vol_input_val
+        self.lrp_output['Architecture_Maturity'] = architecture_maturity_val
+
+        self.lrp_output = self.format_result(result_pred = result)
+        
+        return result, self.lrp_output
     
+    def get_lrp_output(self):
+        return self.lrp_output
+    
+    def format_result(self, result_pred):
+        for idx, row in result_pred.iterrows():
+            for i in range(len(result_pred.columns)):
+                milestone_idx = idx + ';' + row.index[i]
+                val = row.values[i]
+                self.lrp_output[milestone_idx] = val
+
+        return self.lrp_output
+
 
 class Manual_Entry_Model:
 
@@ -755,6 +805,8 @@ class Manual_Entry_Model:
         self.Die_Architecture_Info_selection = ['Legacy Client','Foveros Client', 'EMIB', 'Co-EMIB']
         self.WLA_Maturity_selection = ['Evolutionary','Revolutionary']
         self.Pkg_Assemb_Maturity_selection = ['Evolutionary','Revolutionary']
+        
+        self.lrp_output = None
 
     def multiplier(self, PRQ, maturity, val): 
         evol_multiplier = [4, 2.5, 2, 1.5, 1, 1]
@@ -819,4 +871,6 @@ class Manual_Entry_Model:
         output_dict = {'Milestone': Milestone, 'PO': PO, 'ES1': ES1, 'ES2': ES2, 'QS': QS, 'PRQ': PRQ, 'PRQ_1Q': PRQ_1Q}
         output = pd.DataFrame(output_dict)
         output = output.set_index('Milestone')
-        return output
+
+        self.lrp_output = output
+        return self.lrp_output

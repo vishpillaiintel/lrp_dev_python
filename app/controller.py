@@ -25,24 +25,17 @@ st.sidebar.image('theme/logo.png', use_column_width=True)
 new_title = '<p style="color:#333333; font-size: 28px; text-align:center;">ATTD LRP Portal</p>'
 st.sidebar.markdown(new_title, unsafe_allow_html=True)
 
+# Create lrp view based on master table
+# lrp_m = model.LRP_Model()
+# lrp_m.create_LRP_master()
+# lrp_v = view.LRP_View(lrp_m.master)
 
-lrp_m = model.LRP_Model()
-lrp_m.get_data()
-
-
-
-# Create model instances
-rot_m = model.RoT_Model()
-me_m = model.Manual_Entry_Model()
-
-# Create view instances
-lrp_v = view.LRP_View(df)
-pa_v = view.PA_View()
-de_v = view.Data_Entry_View(rot_m, me_m)
+# Create data entry view based on form chosen by user
+de_m = model.Data_Entry_Model()
+de_v = view.Data_Entry_View(de_model=de_m)
 
 page_names_to_funcs = {
-    "LRP": lrp_v.view,
-    "Product Architecture": pa_v.view,
+    #"LRP": lrp_v.view,
     "Data Entry": de_v.view,
 }
 
