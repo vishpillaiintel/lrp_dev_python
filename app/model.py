@@ -139,12 +139,52 @@ class Data_Entry_Model():
         self.rot_model = RoT_Model()
         self.me_model = Manual_Entry_Model()
 
-    def lrp_prediction(self, fields):
-        self.lrp_prediction = self.model.lrp_prediction(fields)
-        return self.lrp_prediction()
-    
-    def send_to_Database(self):
-        pass
+class Data_Review_Model():
+    def __init__(self):
+        self.db_config =  {
+            'host': f"{os.environ.get('host')}",
+            'port': f"{os.environ.get('portnum')}",
+            'user':f"{os.environ.get('user')}",
+            'passwd':f"{os.environ.get('passwd')}",
+            'db':f"{os.environ.get('db')}"
+        }
+        self.rot_model = RoT_Model()
+        self.me_model = Manual_Entry_Model()
+        self.submissions = []
+
+    def get_Pending_Submissions(self):
+        table_name = 'Form_Submissions'
+        submission_status = 'SubmissionStatus'
+        pending = 'Pending'
+        sql = f"""
+            SELECT 
+                * 
+            FROM 
+                {table_name}
+            WHERE 
+                {submission_status} = '{pending}'
+        """
+        with Database(self.db_config) as db_conn:
+            df = db_conn.get_row(sql)
+        
+        submissions = []
+        for a in df.itertuples():
+            submission = Submission()
+            submission.retrieve_Form(form_id_value=a.FormID)
+            submission.submission_date = a.SubmissionDate
+            submission.submission_status = a.SubmissionStatus
+            submission.user_id = a.UserID
+            submission.submission_id = a.SubmissionID
+            submission.parse_FieldValues_db(submission.submission_id)
+            submissions.append(submission)
+
+        self.submissions = submissions
+
+    def set_Submission_to_Review(self, submission_id):
+        for sub in self.submissions:
+            if sub.submission_id == submission_id:
+                self.submission_reviewing = sub
+                return
 
 class Submission():
     def __init__(self):
@@ -195,7 +235,7 @@ class Submission():
     def create_Form(self, form_name):
         # set form based on user input of form name
         self.form = Form(form_name)
-        self.form = self.form.get_Form_Attributes()
+        self.form = self.form.set_Fields()
     
     def publish_Submission(self):
         output_record = ''
@@ -241,7 +281,7 @@ class Submission():
             df = db_conn.get_row(sql)
         
         self.form = Form(form_name=df[form_name])
-        self.form = self.form.get_Form_Attributes()
+        self.form = self.form.get_Form_Attributes(form_id=form_id_value)
 
     def retrieve_Submission_Attributes(self, id):
         # get all attributes from database. calls retrieve_Form, and parse_FieldValues_db().
@@ -263,9 +303,9 @@ class Submission():
         self.submission_date = df['SubmissionDate']
         self.submission_status = df['SubmissionStatus'] 
         self.user_id = df['UserID']
-        self.parse_FieldValues_db()
+        self.parse_FieldValues_db(id)
 
-    def parse_FieldValues_db(self):
+    def parse_FieldValues_db(self, id):
         # parse Field Values string based on "," and "=". Create FieldValues dict.
         self.submission_id = id
         table_name = 'Submission_Fields'
@@ -276,24 +316,27 @@ class Submission():
             FROM 
                 {table_name}
             WHERE
-                {submission_id} = '{self.submission_id}'
+                {submission_id} = '{id}'
         """
         with Database(self.db_config) as db_conn:
             df = db_conn.get_row(sql)
-
-        split_attrs = df['FieldValue'].split(', ')
+        df_field_value = df.FieldValue[0]
+        split_attrs = df_field_value.split(', ')
         attr_keys = []
         attr_values = []
         for attribute in split_attrs:
-            attr_keys.append(attribute.split('=')[0])
-            attr_values.append(attribute.split('=')[1])
+            if len(attribute.split('=')) > 1:
+                attr_keys.append(attribute.split('=')[0])
+                attr_values.append(attribute.split('=')[1])
+            else:
+                attr_keys.append(attribute.split('=')[0])
+                attr_values.append('')
 
         self.field_values_dict = dict(zip(attr_keys, attr_values))  
 
     def create_FieldValues_db(self):
         # create Field Values string based on "," and "=" using already created FieldValues dict.
         fv_db = ''
-        print('ok fv')
         for key, value in self.field_values_dict.items():
             if key != next(reversed(self.field_values_dict.keys())):
                 fv_db += str(key) + "=" + str(value) + ", "
@@ -406,29 +449,15 @@ class Form():
         }
         self.fields = None
         self.form_id = None
-        self.form_description = None
     
         if 'RoT' in form_name:
             self.form_name = 'RoT - Q2 2023'
         else:
             self.form_name = 'Manual Entry - Q2 2023'
 
-    def get_Form_Attributes(self):
-        table_name = 'Forms'
-        form = self.form_name
-        sql = f"""
-            SELECT 
-                * 
-            FROM 
-                {table_name}
-            WHERE
-                FormName = '{form}'
-        """
-        with Database(self.db_config) as db_conn:
-            df = db_conn.get_row(sql)
+    def get_Form_Attributes(self, form_id):
 
-        self.form_id = df['FormID']
-        self.form_description = df['FormDescription']
+        self.form_id = form_id
         self.set_Fields()
         return self
 
@@ -437,6 +466,7 @@ class Form():
             self.fields = config.rot_config
         else:
             self.fields = config.manual_entry_config
+        return self
     
     def get_Field_Attribute(self, field_name, field_attribute):
         return self.fields[f'{field_name}'][f'{field_attribute}']
@@ -786,9 +816,6 @@ class RoT_Model:
         
         return result, self.lrp_output
     
-    def get_lrp_output(self):
-        return self.lrp_output
-    
     def format_result(self, result_pred):
         for idx, row in result_pred.iterrows():
             for i in range(len(result_pred.columns)):
@@ -806,7 +833,7 @@ class Manual_Entry_Model:
         self.WLA_Maturity_selection = ['Evolutionary','Revolutionary']
         self.Pkg_Assemb_Maturity_selection = ['Evolutionary','Revolutionary']
         
-        self.lrp_output = None
+        self.lrp_output = {}
 
     def multiplier(self, PRQ, maturity, val): 
         evol_multiplier = [4, 2.5, 2, 1.5, 1, 1]
@@ -845,7 +872,7 @@ class Manual_Entry_Model:
         self.Pkg_Assemb_Maturity = self.Pkg_Assemb_Maturity_selection.index(Pkg_Assemb_Maturity) + 1
 
 
-    def lrp_prediction(self, Die_Architecture_Info_val, WLA_Maturity, Pkg_Assemb_Maturity,
+    def lrp_prediction(self, product_name, skew_name, pkg_class, Die_Architecture_Info_val, WLA_Maturity, Pkg_Assemb_Maturity,
                                      PRQ_WLA_RtD, PRQ_WLA_Test_PIYL, PRQ_Pkg_Assemb_RtD,
                                      PRQ_Pkg_Test_PIYL, PRQ_Pkg_Assemb_Finish):
         
@@ -869,8 +896,28 @@ class Manual_Entry_Model:
             PRQ_1Q = [self.multiplier(PRQ_Pkg_Assemb_RtD, self.Pkg_Assemb_Maturity, 6), self.multiplier(PRQ_Pkg_Test_PIYL, self.Pkg_Assemb_Maturity, 6), self.multiplier(PRQ_Pkg_Assemb_Finish, self.Pkg_Assemb_Maturity, 6), self.inventory_yield(self.Die_Architecture_Info_val, 0, 6)]
         
         output_dict = {'Milestone': Milestone, 'PO': PO, 'ES1': ES1, 'ES2': ES2, 'QS': QS, 'PRQ': PRQ, 'PRQ_1Q': PRQ_1Q}
-        output = pd.DataFrame(output_dict)
-        output = output.set_index('Milestone')
+        result = pd.DataFrame(output_dict)
+        result = result.set_index('Milestone')
 
-        self.lrp_output = output
+        self.lrp_output['Product_Name'] = product_name
+        self.lrp_output['Skew_Name'] = skew_name
+        self.lrp_output['Package_Type'] = pkg_class
+        self.lrp_output['Die_Architecture'] = Die_Architecture_Info_val
+        self.lrp_output['WLA_Architecture_Maturity'] = WLA_Maturity
+        self.lrp_output['Pkg_Assembly_Architecture_Maturity'] = Pkg_Assemb_Maturity
+
+        self.lrp_output = self.format_result(result_pred = result)
+        
+        return result, self.lrp_output
+        
+    def format_result(self, result_pred):
+        for idx, row in result_pred.iterrows():
+            for i in range(len(result_pred.columns)):
+                milestone_idx = idx + ';' + row.index[i]
+                val = row.values[i]
+                if val is None:
+                    val = ''
+                self.lrp_output[milestone_idx] = val
+
         return self.lrp_output
+        

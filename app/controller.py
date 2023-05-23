@@ -1,13 +1,9 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-from PIL import Image
-import os
 
 import model
 import view
-import config
-
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -34,9 +30,13 @@ st.sidebar.markdown(new_title, unsafe_allow_html=True)
 de_m = model.Data_Entry_Model()
 de_v = view.Data_Entry_View(de_model=de_m)
 
+dr_m = model.Data_Review_Model()
+dr_v = view.Data_Review_View(dr_model=dr_m)
+
 page_names_to_funcs = {
     #"LRP": lrp_v.view,
     "Data Entry": de_v.view,
+    "Data Review": dr_v.view
 }
 
 selected_page = st.sidebar.selectbox("Select a View", page_names_to_funcs.keys())
