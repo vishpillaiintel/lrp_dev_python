@@ -195,15 +195,15 @@ class Data_Entry_View():
                                                 options=self.de_model.submission.form.fields['Pkg_Assembly_Architecture_Maturity']['Field_Selection'], key='pkg_assemb_maturity_me')
         
         if die_architect_input == 'Foveros Client' or die_architect_input == 'Co-EMIB':
-            prq_wla_rtd_input = st.number_input(label='PRQ WLA RtD', min_value=0.0, max_value=100.0, value=99.0, step=0.1)
-            prq_wla_test_input = st.number_input(label='PRQ WLA Test PIYL', min_value=0.0, max_value=100.0, value=99.0, step=0.1)
-            prq_pkg_assemb_rtd_input = st.number_input(label='PRQ Pkg Assemb RtD', min_value=0.0, max_value=100.0, value=99.0, step=0.1)
-            prq_pkg_test_piyl_input = st.number_input(label='PRQ Pkg Test PIYL', min_value=0.0, max_value=100.0, value=99.0, step=0.1)
-            prq_pkg_assemb_finish_input = st.number_input(label='PRQ Pkg Assemb Finish', min_value=0.0, max_value=100.0, value=99.0, step=0.1)
+            prq_wla_rtd_input = st.number_input(label='PRQ WLA RtD', min_value=0.0, max_value=100.0, value=99.0, step=0.1, format="%.2f")
+            prq_wla_test_input = st.number_input(label='PRQ WLA Test PIYL', min_value=0.0, max_value=100.0, value=99.0, step=0.1, format="%.2f")
+            prq_pkg_assemb_rtd_input = st.number_input(label='PRQ Pkg Assemb RtD', min_value=0.0, max_value=100.0, value=99.0, step=0.1, format="%.2f")
+            prq_pkg_test_piyl_input = st.number_input(label='PRQ Pkg Test PIYL', min_value=0.0, max_value=100.0, value=99.0, step=0.1, format="%.2f")
+            prq_pkg_assemb_finish_input = st.number_input(label='PRQ Pkg Assemb Finish', min_value=0.0, max_value=100.0, value=99.0, step=0.1, format="%.2f")
         else:
-            prq_pkg_assemb_rtd_input = st.number_input(label='PRQ Pkg Assemb RtD', min_value=0.0, max_value=100.0, value=99.0, step=0.1)
-            prq_pkg_test_piyl_input = st.number_input(label='PRQ Pkg Test PIYL', min_value=0.0, max_value=100.0, value=99.0, step=0.1)
-            prq_pkg_assemb_finish_input = st.number_input(label='PRQ Pkg Assemb Finish', min_value=0.0, max_value=100.0, value=99.0, step=0.1)
+            prq_pkg_assemb_rtd_input = st.number_input(label='PRQ Pkg Assemb RtD', min_value=0.0, max_value=100.0, value=99.0, step=0.1, format="%.2f")
+            prq_pkg_test_piyl_input = st.number_input(label='PRQ Pkg Test PIYL', min_value=0.0, max_value=100.0, value=99.0, step=0.1, format="%.2f")
+            prq_pkg_assemb_finish_input = st.number_input(label='PRQ Pkg Assemb Finish', min_value=0.0, max_value=100.0, value=99.0, step=0.1, format="%.2f")
 
         if 'ME_Button' not in st.session_state:
             st.session_state['ME_Button'] = False
@@ -258,23 +258,29 @@ class Data_Review_View():
         self.pending_options = {}
     
     def create_pending_options(self):
-        start_time = datetime.datetime.now()
         self.dr_model.get_Pending_Submissions()
-        end_time = datetime.datetime.now()
-        print('This many seconds:')
-        print(end_time - start_time)
-
-        for submission in self.dr_model.submissions:
-            self.pending_options[submission.submission_id] = f'Submission ID: {submission.submission_id}, ' + \
-                                                            f'User ID: {submission.user_id}, ' + \
-                                                            f'Submission Date: {submission.submission_date}'
+        for pending_submission in self.dr_model.pending_submissions:
+            self.pending_options[f'Submission ID: {pending_submission.submission_id}, ' + \
+                                f'User ID: {pending_submission.user_id}, ' +  f'Submission Date: {pending_submission.submission_date}'] = pending_submission.submission_id
         return self.pending_options
 
 
     def view(self):
+        if 'get_sub_key' not in st.session_state:
+            st.session_state['get_sub_key'] = False
+        
         st.write("Data Review")
         self.create_pending_options()
-        st.selectbox(label='Pick a Pending Submission to be Reviewed:', options=list(self.pending_options.values()))
+        selected_pending_option = st.selectbox(label='Pick a Pending Submission to be Reviewed:', options=list(self.pending_options.keys()))
+        get_submission_button = st.button(label='Pull Submission Data')
+        if get_submission_button:
+            st.session_state['get_sub_key'] = not st.session_state['get_sub_key']
+            self.dr_model.set_Submission_to_Review(self.pending_options[selected_pending_option])
+            table = pd.Series(self.dr_model.submission_review.field_values_dict)
+            st.table(table)
+        
+
+
 
 
     

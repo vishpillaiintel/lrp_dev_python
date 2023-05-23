@@ -101,13 +101,13 @@ rot_config = {
         'Field_ID': 1324626,
         'Field_Type': str,
         'Field_Question': 'Die Architecture',
-        'Field_Selection': ['EMIB, SOD + Subst. Cu FLI, die size: <800mm2, BP (core/bridge):130/55um IO redun:1/1200', \
-            'EMIB, Die Cu FLI + ASOS, die size: <400mm2, BP (core/bridge):100/55um IO redun:1/16', \
-            'EMIB, Split solder, die size: <800mm2, BP (core/bridge):100/55um IO redun:1/16', \
-            'EMIB, Split solder, die size: <800mm2, BP (core/bridge):100/45um IO redun:1/16', \
-            'CoEMIB, Split solder, die size: <800mm2, BP (core/bridge):100/55um IO redun:1/16', \
-            'Legacy monolithic, Die Cu FLI + Microball', \
-            'Foveros Client, Split solder, die size: less than 400mm2, BP (core/bridge):110um IO redun:No'],
+        'Field_Selection': ['EMIB; SOD + Subst. Cu FLI; die size: <800mm2; BP (core/bridge):130/55um IO redun:1/1200', \
+            'EMIB; Die Cu FLI + ASOS; die size: <400mm2; BP (core/bridge):100/55um IO redun:1/16', \
+            'EMIB; Split solder; die size: <800mm2; BP (core/bridge):100/55um IO redun:1/16', \
+            'EMIB; Split solder; die size: <800mm2; BP (core/bridge):100/45um IO redun:1/16', \
+            'CoEMIB; Split solder; die size: <800mm2; BP (core/bridge):100/55um IO redun:1/16', \
+            'Legacy monolithic; Die Cu FLI + Microball', \
+            'Foveros Client; Split solder; die size: less than 400mm2; BP (core/bridge):110um IO redun:No'],
         'Field_Required': 1
     },
     'Number_of_Satellite_Die': {

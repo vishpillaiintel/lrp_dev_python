@@ -150,7 +150,7 @@ class Data_Review_Model():
         }
         self.rot_model = RoT_Model()
         self.me_model = Manual_Entry_Model()
-        self.submissions = []
+        self.pending_submissions = []
 
     def get_Pending_Submissions(self):
         table_name = 'Form_Submissions'
@@ -175,15 +175,15 @@ class Data_Review_Model():
             submission.submission_status = a.SubmissionStatus
             submission.user_id = a.UserID
             submission.submission_id = a.SubmissionID
-            submission.parse_FieldValues_db(submission.submission_id)
             submissions.append(submission)
 
-        self.submissions = submissions
+        self.pending_submissions = submissions
 
     def set_Submission_to_Review(self, submission_id):
-        for sub in self.submissions:
+        for sub in self.pending_submissions:
             if sub.submission_id == submission_id:
-                self.submission_reviewing = sub
+                self.submission_review = sub
+                self.submission_review.parse_FieldValues_db(submission_id)
                 return
 
 class Submission():
@@ -280,7 +280,7 @@ class Submission():
         with Database(self.db_config) as db_conn:
             df = db_conn.get_row(sql)
         
-        self.form = Form(form_name=df[form_name])
+        self.form = Form(form_name=df[form_name][0])
         self.form = self.form.get_Form_Attributes(form_id=form_id_value)
 
     def retrieve_Submission_Attributes(self, id):
@@ -449,7 +449,7 @@ class Form():
         }
         self.fields = None
         self.form_id = None
-    
+
         if 'RoT' in form_name:
             self.form_name = 'RoT - Q2 2023'
         else:
@@ -489,13 +489,13 @@ class RoT_Model:
         self.dow_architect_selection = ["No WLA", "DoW50", "DoW36", "DoW25 w/o IO redundancy", "DoW25 w/ 2:38 IO redundancy"]
         self.hbi_architect_selection = ["No WLA", "W2W HBI"]
         self.wla_architect_selection = ["No WLA", "Foveros DoW", "ODI", "HBI"]
-        self.die_architect_selection = ['EMIB, SOD + Subst. Cu FLI, die size: <800mm2, BP (core/bridge):130/55um IO redun:1/1200', \
-            'EMIB, Die Cu FLI + ASOS, die size: <400mm2, BP (core/bridge):100/55um IO redun:1/16', \
-            'EMIB, Split solder, die size: <800mm2, BP (core/bridge):100/55um IO redun:1/16', \
-            'EMIB, Split solder, die size: <800mm2, BP (core/bridge):100/45um IO redun:1/16', \
-            'CoEMIB, Split solder, die size: <800mm2, BP (core/bridge):100/55um IO redun:1/16', \
-            'Legacy monolithic, Die Cu FLI + Microball', \
-            'Foveros Client, Split solder, die size: less than 400mm2, BP (core/bridge):110um IO redun:No']
+        self.die_architect_selection = ['EMIB; SOD + Subst. Cu FLI; die size: <800mm2; BP (core/bridge):130/55um IO redun:1/1200', \
+            'EMIB; Die Cu FLI + ASOS; die size: <400mm2; BP (core/bridge):100/55um IO redun:1/16', \
+            'EMIB; Split solder; die size: <800mm2; BP (core/bridge):100/55um IO redun:1/16', \
+            'EMIB; Split solder; die size: <800mm2; BP (core/bridge):100/45um IO redun:1/16', \
+            'CoEMIB; Split solder; die size: <800mm2; BP (core/bridge):100/55um IO redun:1/16', \
+            'Legacy monolithic; Die Cu FLI + Microball', \
+            'Foveros Client; Split solder; die size: less than 400mm2; BP (core/bridge):110um IO redun:No']
         self.exist_emib_selection = ["Yes", "No"]
         self.exist_point_selection = ["Yes", "No"]
         self.exist_hbm_selection = ["Yes", "No"]
@@ -821,7 +821,7 @@ class RoT_Model:
             for i in range(len(result_pred.columns)):
                 milestone_idx = idx + ';' + row.index[i]
                 val = row.values[i]
-                self.lrp_output[milestone_idx] = val
+                self.lrp_output[milestone_idx] = "{:.2f}".format(round(val, 2))
 
         return self.lrp_output
 
@@ -917,7 +917,7 @@ class Manual_Entry_Model:
                 val = row.values[i]
                 if val is None:
                     val = ''
-                self.lrp_output[milestone_idx] = val
+                self.lrp_output[milestone_idx] = "{:.2f}".format(round(val, 2))
 
         return self.lrp_output
         
