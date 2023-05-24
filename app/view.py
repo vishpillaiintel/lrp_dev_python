@@ -278,7 +278,7 @@ class Data_Review_View():
         col1, col2 = st.columns([1,1], gap='small')
 
         with col1:
-            get_submission_button = st.button(label='Pull Submission Data')
+            get_submission_button = st.button(label='Pull Data for Review')
         with col2:
             reset_button = st.button(label='Reset')
         
@@ -304,17 +304,273 @@ class Data_Review_View():
             if st.button(label='Submit to Database'):
                 st.session_state['reviewed_key'] = True
                 if reviewed=='Approve':
-                    record = self.dr_model.create_Approval(user_id)
+                    record = self.dr_model.create_Approval(user_id=user_id, field_values_dict=self.dr_model.submission_review.field_values_dict)
                     st.write(record)
 
                 elif reviewed=='Reject':
-                    record = self.dr_model.submission_review.update_Submission(status='Rejected')
+                    record = self.dr_model.submission_review.update_Submission(status='Rejected', field_values_dict=self.dr_model.submission_review.field_values_dict)
                     st.write(record)
                 else:
                     st.write('Submission has been left as pending.')
         
 
 
+class Resubmission_View():
 
+    def __init__(self, rs_model):
+        self.rs_model = rs_model
+        self.rejected_options = {}
 
+    def create_rejected_options(self, user_id):
+        self.rs_model.get_Rejected_Submissions(user_id)
+        for rejected_submission in self.rs_model.rejected_submissions:
+            self.rejected_options[f'Submission ID: {rejected_submission.submission_id}, ' + \
+                                f'User ID: {rejected_submission.user_id}, ' + \
+                                f'Submission Date: {rejected_submission.submission_date}'] = rejected_submission.submission_id
+        return self.rejected_options
     
+    def get_index_selection(self, selection_options, value):
+        return selection_options.index(value)
+    
+
+    def view(self):
+        st.write('Resubmission')
+
+        # hardcoding user, need to update later with SSO
+        user_id = 'vpillai' 
+        self.create_rejected_options(user_id)
+        selected_rejected_option = st.selectbox(label='Pick a Rejected Submission to be Resubmitted:', options=list(self.rejected_options.keys()))
+        col1, col2 = st.columns([1,1], gap='small')
+
+        with col1:
+            get_submission_button = st.button(label='Pull Data for Resubmission')
+        with col2:
+            reset_button = st.button(label='Reset', key='Resubmit')
+ 
+        if 'get_sub_rej_key' not in st.session_state:
+            st.session_state['get_sub_rej_key'] = False
+        
+        if 'resubmit_key' not in st.session_state:
+            st.session_state['resubmit_key'] = False 
+    
+        if reset_button:
+            st.session_state['get_sub_rej_key'] = False
+            st.session_state['resubmit_key'] = False 
+        
+        def keep_submissions():
+            st.session_state['get_sub_rej_key'] = True
+            return
+
+        if get_submission_button:
+            st.session_state['get_sub_rej_key'] = not st.session_state['get_sub_rej_key']
+
+        if st.session_state['get_sub_rej_key']:   
+            self.rs_model.set_Submission_to_Resubmit(self.rejected_options[selected_rejected_option])
+
+            if 'RoT' in self.rs_model.submission_resubmit.form.form_name:
+                product_name_input = st.text_input(label=self.rs_model.submission_resubmit.form.fields['Product_Name']['Field_Question'], \
+                                                   value=self.rs_model.submission_resubmit.field_values_dict['Product_Name'], key='product_name_rs_rot', \
+                                                    on_change=keep_submissions)
+                skew_name_input = st.text_input(label=self.rs_model.submission_resubmit.form.fields['Skew_Name']['Field_Question'], 
+                                                    value=self.rs_model.submission_resubmit.field_values_dict['Skew_Name'], key='skew_name_rs_rot')
+
+                package_type_input = st.selectbox(label=self.rs_model.submission_resubmit.form.fields['Package_Type']['Field_Question'], \
+                                                options=self.rs_model.submission_resubmit.form.fields['Package_Type']['Field_Selection'], \
+                                                index=self.get_index_selection(self.rs_model.submission_resubmit.form.fields['Package_Type']['Field_Selection'], \
+                                                self.rs_model.submission_resubmit.field_values_dict['Package_Type']), key='package_type_rs_rot')
+                
+                package_type_estim_input = st.selectbox(label=self.rs_model.submission_resubmit.form.fields['Package_Type_Estimation']['Field_Question'], \
+                                            options=self.rs_model.submission_resubmit.form.fields['Package_Type_Estimation']['Field_Selection'], \
+                                            index=self.get_index_selection(self.rs_model.submission_resubmit.form.fields['Package_Type_Estimation']['Field_Selection'], \
+                                            self.rs_model.submission_resubmit.field_values_dict['Package_Type_Estimation']), key='package_type_estimation_rs_rot')
+                
+                num_main = st.number_input(label=self.rs_model.submission_resubmit.form.fields['Number_of_Main_Die']['Field_Question'], \
+                                            min_value=self.rs_model.submission_resubmit.form.fields['Number_of_Main_Die']['Min_Value'], \
+                                            max_value=self.rs_model.submission_resubmit.form.fields['Number_of_Main_Die']['Max_Value'], \
+                                            value=int(self.rs_model.submission_resubmit.field_values_dict['Number_of_Main_Die']), key='num_main_rs_rot')
+                
+                exist_emib_input = st.selectbox(label=self.rs_model.submission_resubmit.form.fields['Exist_EMIB']['Field_Question'], \
+                                                options=self.rs_model.submission_resubmit.form.fields['Exist_EMIB']['Field_Selection'], \
+                                                index=self.get_index_selection(self.rs_model.submission_resubmit.form.fields['Exist_EMIB']['Field_Selection'], \
+                                                self.rs_model.submission_resubmit.field_values_dict['Exist_EMIB']), key='exist_emib_rs_rot')
+                
+                exist_point_input = st.selectbox(label=self.rs_model.submission_resubmit.form.fields['Exist_POINT']['Field_Question'], \
+                                                options=self.rs_model.submission_resubmit.form.fields['Exist_POINT']['Field_Selection'], \
+                                                index=self.get_index_selection(self.rs_model.submission_resubmit.form.fields['Exist_POINT']['Field_Selection'], \
+                                                self.rs_model.submission_resubmit.field_values_dict['Exist_POINT']), key='exist_point_rs_rot')
+
+                st.write('WLA Information') 
+                wla_architect_input = st.selectbox(label=self.rs_model.submission_resubmit.form.fields['WLA_Architecture']['Field_Question'], \
+                                                options=self.rs_model.submission_resubmit.form.fields['WLA_Architecture']['Field_Selection'], \
+                                                index=self.get_index_selection(self.rs_model.submission_resubmit.form.fields['WLA_Architecture']['Field_Selection'], \
+                                                self.rs_model.submission_resubmit.field_values_dict['WLA_Architecture']), key='wla_architect_rs_rot')
+                
+                chiplet_num = st.number_input(label=self.rs_model.submission_resubmit.form.fields['Number_of_Chiplet_Base_Die']['Field_Question'], \
+                                            min_value=self.rs_model.submission_resubmit.form.fields['Number_of_Chiplet_Base_Die']['Min_Value'], \
+                                            max_value=self.rs_model.submission_resubmit.form.fields['Number_of_Chiplet_Base_Die']['Max_Value'], \
+                                            value=int(self.rs_model.submission_resubmit.field_values_dict['Number_of_Chiplet_Base_Die']), key='chiplet_num_rs_rot')
+                
+                dow_architect_input = 'No WLA'
+                odi_chiplet_size_input = 'No WLA'
+                hbi_architect_input = 'No WLA'
+                signal_area_hbi = 0
+                if wla_architect_input == 'Foveros DoW':
+                    dow_architect_input = st.selectbox(label=self.rs_model.submission_resubmit.form.fields['DoW_Architecture']['Field_Question'], \
+                                                    options=self.rs_model.submission_resubmit.form.fields['DoW_Architecture']['Field_Selection'], \
+                                                    index=self.get_index_selection(self.rs_model.submission_resubmit.form.fields['DoW_Architecture']['Field_Selection'], \
+                                                    self.rs_model.submission_resubmit.field_values_dict['DoW_Architecture']), key='dow_architect_rs_rot')
+                elif wla_architect_input == 'ODI':
+                    odi_chiplet_size_input = st.selectbox(label=self.rs_model.submission_resubmit.form.fields['ODI_Chiplet_Size']['Field_Question'], \
+                                                    options=self.rs_model.submission_resubmit.form.fields['ODI_Chiplet_Size']['Field_Selection'], \
+                                                    index=self.get_index_selection(self.rs_model.submission_resubmit.form.fields['ODI_Chiplet_Size']['Field_Selection'], \
+                                                    self.rs_model.submission_resubmit.field_values_dict['ODI_Chiplet_Size']), key='odi_chiplet_size_rs_rot')
+                elif wla_architect_input == 'HBI':
+                    hbi_architect_input = st.selectbox(label=self.rs_model.submission_resubmit.form.fields['HBI_Architecture']['Field_Question'], \
+                                                    options=self.rs_model.submission_resubmit.form.fields['HBI_Architecture']['Field_Selection'], \
+                                                    index=self.get_index_selection(self.rs_model.submission_resubmit.form.fields['HBI_Architecture']['Field_Selection'], \
+                                                    self.rs_model.submission_resubmit.field_values_dict['HBI_Architecture']), key='hbi_architect_rs_rot')
+                    
+                    signal_area_hbi = st.number_input(label=self.rs_model.submission_resubmit.form.fields['Signal_Area']['Field_Question'], \
+                                            min_value=self.rs_model.submission_resubmit.form.fields['Signal_Area']['Min_Value'], \
+                                            max_value=self.rs_model.submission_resubmit.form.fields['Signal_Area']['Max_Value'], \
+                                            value=int(self.rs_model.submission_resubmit.field_values_dict['Signal_Area']), key='signal_area_rs_rot')
+
+                st.write('Other Information')
+                die_architect_input = st.selectbox(label=self.rs_model.submission_resubmit.form.fields['Die_Architecture_Summary']['Field_Question'], \
+                                            options=self.rs_model.submission_resubmit.form.fields['Die_Architecture_Summary']['Field_Selection'], \
+                                            index=self.get_index_selection(self.rs_model.submission_resubmit.form.fields['Die_Architecture_Summary']['Field_Selection'], \
+                                            self.rs_model.submission_resubmit.field_values_dict['Die_Architecture_Summary']), key='die_architect_rs_rot')
+                
+                type_num_satellite = st.number_input(label=self.rs_model.submission_resubmit.form.fields['Number_of_Satellite_Die']['Field_Question'], \
+                                                    min_value=self.rs_model.submission_resubmit.form.fields['Number_of_Satellite_Die']['Min_Value'], \
+                                                    max_value=self.rs_model.submission_resubmit.form.fields['Number_of_Satellite_Die']['Max_Value'], \
+                                                    value=int(self.rs_model.submission_resubmit.field_values_dict['Number_of_Satellite_Die']), key='type_num_satellite_rs_rot')
+                
+                exist_hbm = st.selectbox(label=self.rs_model.submission_resubmit.form.fields['Exist_HBM']['Field_Question'], \
+                                        options=self.rs_model.submission_resubmit.form.fields['Exist_HBM']['Field_Selection'], \
+                                        index=self.get_index_selection(self.rs_model.submission_resubmit.form.fields['Exist_HBM']['Field_Selection'], \
+                                        self.rs_model.submission_resubmit.field_values_dict['Exist_HBM']), key='exist_hbm_rs_rot')
+                
+                lifetime_volume = st.selectbox(label=self.rs_model.submission_resubmit.form.fields['Lifetime_Volume']['Field_Question'], \
+                                        options=self.rs_model.submission_resubmit.form.fields['Lifetime_Volume']['Field_Selection'],  \
+                                        index=self.get_index_selection(self.rs_model.submission_resubmit.form.fields['Lifetime_Volume']['Field_Selection'], \
+                                        self.rs_model.submission_resubmit.field_values_dict['Lifetime_Volume']), key='lifetime_vol_rs_rot')
+
+                architecture_maturity_input = st.selectbox(label=self.rs_model.submission_resubmit.form.fields['Architecture_Maturity']['Field_Question'], \
+                                        options=self.rs_model.submission_resubmit.form.fields['Architecture_Maturity']['Field_Selection'],  \
+                                        index=self.get_index_selection(self.rs_model.submission_resubmit.form.fields['Architecture_Maturity']['Field_Selection'], \
+                                        self.rs_model.submission_resubmit.field_values_dict['Architecture_Maturity']), key='architecture_mat_rs_rot')
+                    
+
+                if 'RoT_RS_Button' not in st.session_state:
+                    st.session_state['RoT_RS_Button'] = False
+
+                if 'DB_RS_RoT_Submission' not in st.session_state:
+                    st.session_state['DB_RS_RoT_Submission'] = False
+
+                result, lrp_output = self.rs_model.rot_model.lrp_prediction(product_name=product_name_input, skew_name=skew_name_input, chiplet_num=chiplet_num, \
+                                                    pkg_type=package_type_estim_input, pkg_class=package_type_input, main_num=num_main, exist_emib=exist_emib_input, \
+                                                    point_pkg=exist_point_input, lifetime_vol_input_val=lifetime_volume, \
+                                                    wla_architect=wla_architect_input, dow_architect_input_val=dow_architect_input, \
+                                                    odi_chiplet_size=odi_chiplet_size_input, hbi_architect=hbi_architect_input, signal_area_hbi=signal_area_hbi,  \
+                                                    exist_hbm_input_val=exist_hbm, die_architect_input_val=die_architect_input, type_num_satellite_input_val=type_num_satellite, \
+                                                    architecture_maturity_val=architecture_maturity_input)
+                
+                if st.button('Run Data Prediction', key = 'run_prediction_rs_rot'):
+                    st.session_state['RoT_RS_Button'] = not st.session_state['RoT_RS_Button']
+                    st.write(f'Product Name: {product_name_input} {skew_name_input}')
+                    st.write(f'Package Type: {package_type_input}')
+                    st.dataframe(result)
+
+                if st.session_state['RoT_RS_Button']:
+                    if st.button('Submit to Database?', key='submit_database_rs_rot'):
+                        st.session_state['DB_RS_RoT_Submission'] = not st.session_state['DB_RS_RoT_Submission']        
+                        field_values_dict = lrp_output
+                        record = self.rs_model.submission_resubmit.update_Submission(status='Pending', field_values_dict=field_values_dict)
+                        st.write(record)
+            else:
+                product_type_input = st.text_input(label=self.rs_model.submission_resubmit.form.fields['Product_Name']['Field_Question'],  \
+                                                   value=self.rs_model.submission_resubmit.field_values_dict['Product_Name'], key='product_name_rs_me')
+                
+                skew_name_input = st.text_input(label=self.rs_model.submission_resubmit.form.fields['Skew_Name']['Field_Question'], \
+                                            value=self.rs_model.submission_resubmit.field_values_dict['Skew_Name'], key='skew_name_rs_me')
+
+                package_type_input = st.selectbox(label=self.rs_model.submission_resubmit.fields['Package_Type']['Field_Question'], \
+                                                options=self.rs_model.submission_resubmit.form.fields['Package_Type']['Field_Selection'], \
+                                                index=self.get_index_selection(self.rs_model.submission_resubmit.form.fields['Package_Type']['Field_Selection'], \
+                                                self.rs_model.submission_resubmit.field_values_dict['Package_Type']), key='package_type_rs_me')
+                
+                die_architect_input = st.selectbox(label=self.rs_model.submission_resubmit.fields['Die_Architecture']['Field_Question'], \
+                                                options=self.rs_model.submission_resubmit.form.fields['Die_Architecture']['Field_Selection'], \
+                                                index=self.get_index_selection(self.rs_model.submission_resubmit.form.fields['Die_Architecture']['Field_Selection'], \
+                                                self.rs_model.submission_resubmit.field_values_dict['Die_Architecture']), key='die_arch_rs_me')
+                
+                if die_architect_input == 'Foveros Client' or die_architect_input == 'Co-EMIB':
+                    wla_arch_maturity_input = st.selectbox(label=self.rs_model.submission_resubmit.fields['WLA_Architecture_Maturity']['Field_Question'], \
+                                                        options=self.rs_model.submission_resubmit.fields['WLA_Architecture_Maturity']['Field_Selection'], \
+                                                        index=self.get_index_selection(self.rs_model.submission_resubmit.form.fields['WLA_Architecture_Maturity']['Field_Selection'], \
+                                                        self.rs_model.submission_resubmit.field_values_dict['WLA_Architecture_Maturity']), key='wla_maturity_rs_me')
+
+                pkg_assemb_maturity_input = st.selectbox(label=self.rs_model.submission_resubmit.fields['Pkg_Assembly_Architecture_Maturity']['Field_Question'], \
+                                                        options=self.rs_model.submission_resubmit.fields['Pkg_Assembly_Architecture_Maturity']['Field_Selection'], \
+                                                        index=self.get_index_selection(self.rs_model.submission_resubmit.form.fields['Pkg_Assembly_Architecture_Maturity']['Field_Selection'], \
+                                                        self.rs_model.submission_resubmit.field_values_dict['Pkg_Assembly_Architecture_Maturity']), key='pkg_assemb_maturity_rs_me')
+                
+                if die_architect_input == 'Foveros Client' or die_architect_input == 'Co-EMIB':
+                    prq_wla_rtd_input = st.number_input(label='PRQ WLA RtD', min_value=0.0, max_value=100.0, \
+                                                        value=float(self.rs_model.submission_resubmit.field_values_dict['Pkg_Assembly_Architecture_Maturity']),  \
+                                                        step=0.1, format="%.2f")
+                    prq_wla_test_input = st.number_input(label='PRQ WLA Test PIYL', min_value=0.0, max_value=100.0, \
+                                                        value=float(self.rs_model.submission_resubmit.field_values_dict['Pkg_Assembly_Architecture_Maturity']),  \
+                                                        step=0.1, format="%.2f")
+                    prq_pkg_assemb_rtd_input = st.number_input(label='PRQ Pkg Assemb RtD', min_value=0.0, max_value=100.0, \
+                                                        value=float(self.rs_model.submission_resubmit.field_values_dict['Pkg_Assembly_Architecture_Maturity']),  \
+                                                        step=0.1, format="%.2f")
+                    prq_pkg_test_piyl_input = st.number_input(label='PRQ Pkg Test PIYL', min_value=0.0, max_value=100.0, \
+                                                        value=float(self.rs_model.submission_resubmit.field_values_dict['Pkg_Assembly_Architecture_Maturity']),  \
+                                                        step=0.1, format="%.2f")
+                    prq_pkg_assemb_finish_input = st.number_input(label='PRQ Pkg Assemb Finish', min_value=0.0, max_value=100.0, \
+                                                        value=float(self.rs_model.submission_resubmit.field_values_dict['Pkg_Assembly_Architecture_Maturity']),  \
+                                                        step=0.1, format="%.2f")
+                else:
+                    prq_pkg_assemb_rtd_input = st.number_input(label='PRQ Pkg Assemb RtD', min_value=0.0, max_value=100.0, \
+                                                        value=float(self.rs_model.submission_resubmit.field_values_dict['Pkg_Assembly_Architecture_Maturity']),  \
+                                                        step=0.1, format="%.2f")
+                    prq_pkg_test_piyl_input = st.number_input(label='PRQ Pkg Test PIYL', min_value=0.0, max_value=100.0, \
+                                                        value=float(self.rs_model.submission_resubmit.field_values_dict['Pkg_Assembly_Architecture_Maturity']),  \
+                                                        step=0.1, format="%.2f")
+                    prq_pkg_assemb_finish_input = st.number_input(label='PRQ Pkg Assemb Finish', min_value=0.0, max_value=100.0, \
+                                                        value=float(self.rs_model.submission_resubmit.field_values_dict['Pkg_Assembly_Architecture_Maturity']),  \
+                                                        step=0.1, format="%.2f")
+
+                if 'ME_RS_Button' not in st.session_state:
+                    st.session_state['ME_RS_Button'] = False
+
+                if 'ME_DB_RS_Submission' not in st.session_state:
+                    st.session_state['ME_DB_RS_Submission'] = False
+                
+                if die_architect_input == 'Foveros Client' or die_architect_input == 'Co-EMIB':
+                    result, lrp_output = self.rs_model.me_model.lrp_prediction(product_name=product_type_input, skew_name=skew_name_input, pkg_class=package_type_input, \
+                                        Die_Architecture_Info_val=die_architect_input, WLA_Maturity=wla_arch_maturity_input, \
+                                        Pkg_Assemb_Maturity=pkg_assemb_maturity_input, PRQ_WLA_RtD=prq_wla_rtd_input, \
+                                        PRQ_WLA_Test_PIYL=prq_wla_test_input, PRQ_Pkg_Assemb_RtD=prq_pkg_assemb_rtd_input, \
+                                        PRQ_Pkg_Test_PIYL=prq_pkg_test_piyl_input, PRQ_Pkg_Assemb_Finish=prq_pkg_assemb_finish_input)
+                else:
+                    result, lrp_output = self.rs_model.me_model.lrp_prediction(product_name=product_type_input, skew_name=skew_name_input, pkg_class=package_type_input, \
+                                    Die_Architecture_Info_val=die_architect_input, WLA_Maturity=None, \
+                                    Pkg_Assemb_Maturity=pkg_assemb_maturity_input, PRQ_WLA_RtD=None, \
+                                    PRQ_WLA_Test_PIYL=None, PRQ_Pkg_Assemb_RtD=prq_pkg_assemb_rtd_input, \
+                                    PRQ_Pkg_Test_PIYL=prq_pkg_test_piyl_input, PRQ_Pkg_Assemb_Finish=prq_pkg_assemb_finish_input)
+
+                if st.button('Run Data Prediction', key='run_prediction_rs_me'):
+                    st.session_state['ME_RS_Button'] = not st.session_state['ME_Button']
+                    st.write(f'Product Name: {product_type_input} {skew_name_input}')
+                    st.write(f'Package Type: {package_type_input}')
+                    st.dataframe(result)
+                
+                if st.session_state['ME_RS_Button']:
+                    if st.button('Submit to Database?', key='submit_database_rs_me'):
+                        st.session_state['ME_DB_RS_Submission'] = not st.session_state['ME_DB_RS_Submission']        
+                        field_values_dict = lrp_output
+                        record = self.rs_model.submission_resubmit.update_Submission(status='Pending', field_values_dict=field_values_dict)
+                        st.write(record)

@@ -111,10 +111,10 @@ class LRP_Model:
                 break
 
         if wla:
-            milestone_order = ['WLA_RtD', 'WLA_Test_PIYL','WLA_Inv_Yield','Pkg_Assemb_RtD', \
-                               'Pkg_Assemb_Test_PIYL','Pkg_Assemb_Finish','Pkg_Inv_Yield']
-        else:
-            milestone_order = ['Pkg_Assemb_RtD','Pkg_Assemb_Test_PIYL','Pkg_Assemb_Finish','Pkg_Inv_Yield']
+            milestone_order = ['WLA RtD', 'WLA Test PIYL','WLA Inventory Yield','Pkg Assemb_RtD', \
+                               'Pkg Assemb Test PIYL','Pkg Assemb Finish','Pkg Assemb Inventory Yield']
+        else: 
+            milestone_order = ['Pkg Assemb RtD','Pkg Assemb Test PIYL','Pkg Assemb Finish','Pkg Assemb Inventory Yield']
 
         for milestone in milestone_order:
             master_table.loc[index] = [product_name, skew_name, package_type, milestone, \
@@ -125,10 +125,10 @@ class LRP_Model:
             index+=1
         return master_table, index
 
-    def idx_milestone(milestone, prq_timeline_i):
+    def idx_milestone(self, milestone, prq_timeline_i):
         
         # utilize prq_timeline id and create index for access to milestone values (semi-colon is a critical component)
-        prq_timeline_order = ['P0/ES0', 'ES1', 'ES2', 'QS', 'PQS', 'PRQ', 'PRQ+1Q']
+        prq_timeline_order = ['PO/ES0', 'ES1', 'ES2', 'QS', 'PQS', 'PRQ', 'PRQ+1Q']
         index = milestone + ';' + prq_timeline_order[prq_timeline_i]
             
         return index
@@ -186,13 +186,66 @@ class Data_Review_Model():
                 self.submission_review.parse_FieldValues_db(submission_id)
                 return
     
-    def create_Approval(self, user_id):
+    def create_Approval(self, user_id, field_values_dict):
         new_approval = Approval()
         new_approval.set_Approval_Attributes(submission_id=self.submission_review.submission_id, \
                                             user_id=user_id)
-        record = new_approval.publish_Approval()
+        record = new_approval.publish_Approval(field_values_dict)
         return record
+
+class Resubmission_Model():
     
+    def __init__(self):
+        self.db_config =  {
+            'host': f"{os.environ.get('host')}",
+            'port': f"{os.environ.get('portnum')}",
+            'user':f"{os.environ.get('user')}",
+            'passwd':f"{os.environ.get('passwd')}",
+            'db':f"{os.environ.get('db')}"
+        }
+        self.rot_model = RoT_Model()
+        self.me_model = Manual_Entry_Model()
+        self.rejected_submissions = []
+
+    def get_Rejected_Submissions(self, id):
+        table_name = 'Form_Submissions'
+        submission_status = 'SubmissionStatus'
+        rejected = 'Rejected'
+        user_id = 'UserID'
+
+        sql = f"""
+            SELECT 
+                * 
+            FROM 
+                {table_name}
+            WHERE 
+                {submission_status} = '{rejected}'
+            AND 
+                {user_id} = '{id}'
+        """
+
+        with Database(self.db_config) as db_conn:
+            df = db_conn.get_row(sql)
+        
+        submissions = []
+        for a in df.itertuples():
+            submission = Submission()
+            submission.retrieve_Form(form_id_value=a.FormID)
+            submission.submission_date = a.SubmissionDate
+            submission.submission_status = a.SubmissionStatus
+            submission.user_id = a.UserID
+            submission.submission_id = a.SubmissionID
+            submissions.append(submission)
+
+        self.rejected_submissions = submissions
+
+    def set_Submission_to_Resubmit(self, submission_id):
+        for sub in self.rejected_submissions:
+            if sub.submission_id == submission_id:
+                self.submission_resubmit = sub
+                self.submission_resubmit.parse_FieldValues_db(submission_id)
+                return
+
 class Submission():
     def __init__(self):
         self.field_values_dict = None
@@ -268,8 +321,11 @@ class Submission():
 
         return output_record
     
-    def update_Submission(self, status):
+    def update_Submission(self, status, field_values_dict):
         
+        self.field_values_dict = field_values_dict
+        self.create_FieldValues_db()
+    
         output_record = ''
 
         # send to Approvals table AND reset_Submission_Status(self):
@@ -284,8 +340,22 @@ class Submission():
             sql = f"UPDATE {table} SET {submission_status} = '{self.submission_status}' WHERE {submission_id} = '{self.submission_id}'"
             mycursor.execute(sql)
             db_conn.db_conn.commit()
-            output_record += f'{mycursor.rowcount} record updated in {table}.'
+            if mycursor.rowcount > 0:
+                output_record += f'{mycursor.rowcount} record updated in {table}. '
         
+        # send to database, insert into Submission_Fields 
+        with Database(self.db_config) as db_conn:
+            mycursor = db_conn.db_cursor
+            table = 'Submission_Fields'
+            field_value = 'FieldValue'
+            submission_id = 'SubmissionID'
+            sql = f"UPDATE {table} SET {field_value} = '{self.field_values_db}' WHERE {submission_id} = '{self.submission_id}'"
+            mycursor.execute(sql)
+            db_conn.db_conn.commit()
+            if mycursor.rowcount > 0:
+                output_record+=f'{mycursor.rowcount} record updated into {table}.\n'
+
+        print(output_record)
         return output_record
 
     def reset_Submission_Status(self, status):
@@ -412,10 +482,10 @@ class Approval(Submission):
 
         self.approval_id = id
 
-    def publish_Approval(self):
+    def publish_Approval(self, field_values_dict):
         output_record = ''
         # update Submission tables with status as 'Approved'
-        update_record = self.update_Submission(status='Approved')
+        update_record = self.update_Submission(status='Approved', field_values_dict=field_values_dict)
         output_record+=update_record + ' '
 
         # next, insert new approval record into Approvals 
@@ -756,6 +826,25 @@ class RoT_Model:
         return (1-(100-self.pkgassy_rtd(pkg_type, main_num, exist_emib, point_pkg, exist_hbm_input_val))/100* \
                 (100-self.pkgassy_finish(pkg_type))/100* \
                 (100-self.pkgassy_test(main_num, die_architect_input_val, type_num_satellite_input_val))/100)*100
+
+    def inventory_yield(self, Die_Architecture_Info_val, is_wla, val):
+        if Die_Architecture_Info_val == 6: # legacy client
+            output = [99.90, 99.95, 99.95, 99.95, 99.95, 99.95]
+        elif Die_Architecture_Info_val == 7: # foveros
+            if is_wla == 1:
+                output = [99.7, 99.8, 99.8, 99.8, 99.9, 99.9] 
+            else:
+                output = [99.90, 99.95,	99.95, 99.95, 99.95, 99.95]
+        
+        elif Die_Architecture_Info_val < 4: # emib
+            output = [99.7, 99.8, 99.8, 99.8, 99.9, 99.9]
+        else: # coemib
+            if is_wla == 1:
+                output = [99.7, 99.8, 99.8, 99.8, 99.9, 99.9]
+            else:
+                output = [99.7, 99.8, 99.8, 99.8, 99.9, 99.9]
+
+        return output[val-1]
     
     def get_index(self, pkg_type, exist_emib, point_pkg, lifetime_vol_input_val, \
            wla_architect, dow_architect_input_val, odi_chiplet_size, hbi_architect, \
@@ -799,24 +888,29 @@ class RoT_Model:
         loss = pd.DataFrame(columns = ['PO/ES0', 'ES1', 'ES2', 'QS', 'PRQ', 'PRQ+1Q'])
         if self.wla_architect_input == 1:
             loss.loc[len(loss.index)] = multiplier*pkgassy_rtd
-            loss.loc[len(loss.index)] = multiplier*pkgassy_finish_rtd
             loss.loc[len(loss.index)] = multiplier*pkgassy_test
+            loss.loc[len(loss.index)] = multiplier*pkgassy_finish_rtd
             result = loss.apply(lambda x: 100 - x)
-            result.index = ["Pkg Assemb RtD", "Pkg Assemb Test PIYL", "Pkg Assemb Finish"]
+            result.loc[len(result.index)] = [self.inventory_yield(Die_Architecture_Info_val=self.die_architect_input, is_wla=0, val=i) for i in range(1,7)]
+            result.index = ["Pkg Assemb RtD", "Pkg Assemb Test PIYL", "Pkg Assemb Finish", "Pkg Assemb Inventory Yield"]
 
         else:
-            loss.loc[len(loss.index)] = multiplier*wla_ssdt
             loss.loc[len(loss.index)] = multiplier*wla_rtd
+            loss.loc[len(loss.index)] = multiplier*wla_ssdt
             loss.loc[len(loss.index)] = multiplier*pkgassy_rtd
-            loss.loc[len(loss.index)] = multiplier*pkgassy_finish_rtd
             loss.loc[len(loss.index)] = multiplier*pkgassy_test
+            loss.loc[len(loss.index)] = multiplier*pkgassy_finish_rtd
             result = loss.apply(lambda x: 100 - x)
-            result.index = ["WLA RtD", "WLA Test PIYL", "Pkg Assemb RtD", "Pkg Assemb Test PIYL", "Pkg Assemb Finish"]
+            result.loc[1.5] = [self.inventory_yield(Die_Architecture_Info_val=self.die_architect_input, is_wla=1, val=i) for i in range(1,7)]
+            result.loc[len(result.index)] = [self.inventory_yield(Die_Architecture_Info_val=self.die_architect_input, is_wla=0, val=i) for i in range(1,7)]
+            result = result.sort_index()
+            result.index = ["WLA RtD", "WLA Test PIYL", "WLA Inventory Yield", "Pkg Assemb RtD", "Pkg Assemb Test PIYL", "Pkg Assemb Finish", "Pkg Assemb Inventory Yield"]
         
         self.lrp_output['Product_Name'] = product_name
         self.lrp_output['Skew_Name'] = skew_name
         self.lrp_output['Package_Type'] = pkg_class
         self.lrp_output['Package_Type_Estimation'] = pkg_type
+        self.lrp_output['Number_of_Main_Die'] = main_num
         self.lrp_output['Exist_EMIB'] = exist_emib
         self.lrp_output['Exist_POINT'] = point_pkg
         self.lrp_output['WLA_Architecture'] = wla_architect
