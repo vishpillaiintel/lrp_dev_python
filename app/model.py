@@ -185,7 +185,14 @@ class Data_Review_Model():
                 self.submission_review = sub
                 self.submission_review.parse_FieldValues_db(submission_id)
                 return
-
+    
+    def create_Approval(self, user_id):
+        new_approval = Approval()
+        new_approval.set_Approval_Attributes(submission_id=self.submission_review.submission_id, \
+                                            user_id=user_id)
+        record = new_approval.publish_Approval()
+        return record
+    
 class Submission():
     def __init__(self):
         self.field_values_dict = None
@@ -261,6 +268,26 @@ class Submission():
 
         return output_record
     
+    def update_Submission(self, status):
+        
+        output_record = ''
+
+        # send to Approvals table AND reset_Submission_Status(self):
+        self.reset_Submission_Status(status=status)
+        
+        # first, reset submission status to approved in Form_Submissions
+        with Database(self.db_config) as db_conn:
+            mycursor = db_conn.db_cursor
+            table = 'Form_Submissions'
+            submission_status = 'SubmissionStatus'
+            submission_id = 'SubmissionID'
+            sql = f"UPDATE {table} SET {submission_status} = '{self.submission_status}' WHERE {submission_id} = '{self.submission_id}'"
+            mycursor.execute(sql)
+            db_conn.db_conn.commit()
+            output_record += f'{mycursor.rowcount} record updated in {table}.'
+        
+        return output_record
+
     def reset_Submission_Status(self, status):
         # resets SubmissionStatus.
         self.submission_status = status
@@ -361,7 +388,7 @@ class Approval(Submission):
     def set_Approval_Attributes(self, submission_id, user_id):
         # set Approval info given submission_id and user_id (approver/admin)
         self.approver_id = user_id
-        self.approval_id = self.set_Approval_ID()
+        self.set_Approval_ID()
         self.approval_date = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
         self.retrieve_Submission_Attributes(submission_id)
 
@@ -378,6 +405,7 @@ class Approval(Submission):
             df = db_conn.get_row(sql)
         
         id = random.randint(111111, 999999)
+        print(id)
         
         while id in df['ApprovalID']:
             id = random.randint(111111, 999999)
@@ -385,31 +413,22 @@ class Approval(Submission):
         self.approval_id = id
 
     def publish_Approval(self):
-        
-        # send to Approvals table AND reset_Submission_Status(self):
-        self.reset_Submission_Status(status='Approved')
-        
-        # first, reset submission status to approved in Form_Submissions
-        with Database(self.db_config) as db_conn:
-            mycursor = db_conn.db_cursor()
-            table = 'Form_Submissions'
-            submission_status = 'SubmissionStatus'
-            submission_id = 'SubmissionID'
-            sql = f"UPDATE {table} SET {submission_status} = '{self.submission_status}' WHERE {submission_id} = '{self.submission_id}'"
-            mycursor.execute(sql)
-            db_conn.commit()
-            print(f'{mycursor.rowcount} record updated in {table}.')
-        
+        output_record = ''
+        # update Submission tables with status as 'Approved'
+        update_record = self.update_Submission(status='Approved')
+        output_record+=update_record + ' '
+
         # next, insert new approval record into Approvals 
         with Database(self.db_config) as db_conn:
-            mycursor = db_conn.cursor()
+            mycursor = db_conn.db_cursor
             table = 'Approvals'
             sql = f"INSERT INTO {table} (ApprovalID, ApproverID, ApprovalDate, SubmissionID) VALUES (%s, %s, %s, %s)"
-            val = (self.approval_id, self.approver_id, self.approval_date, self.submission_id)
+            val = (str(self.approval_id), str(self.approver_id), str(self.approval_date), str(self.submission_id))
             mycursor.execute(sql, val)
-            db_conn.commit()
-            print(f'{mycursor.rowcount} record inserted into {table}.')
+            db_conn.db_conn.commit()
+            output_record += f'{mycursor.rowcount} record inserted into {table}.'
         
+        return output_record
 
     def retrieve_Approval_Attributes(self, id):
         # retrieve Approval info assuming Approval has been created in database

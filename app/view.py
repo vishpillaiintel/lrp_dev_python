@@ -266,18 +266,52 @@ class Data_Review_View():
 
 
     def view(self):
+        
+        st.write("Data Review")
+        
+        # hardcoding user, need to update later with SSO
+        user_id = 'vpillai' 
+
+        self.create_pending_options()
+        selected_pending_option = st.selectbox(label='Pick a Pending Submission to be Reviewed:', options=list(self.pending_options.keys()))
+        
+        col1, col2 = st.columns([1,1], gap='small')
+
+        with col1:
+            get_submission_button = st.button(label='Pull Submission Data')
+        with col2:
+            reset_button = st.button(label='Reset')
+        
         if 'get_sub_key' not in st.session_state:
             st.session_state['get_sub_key'] = False
         
-        st.write("Data Review")
-        self.create_pending_options()
-        selected_pending_option = st.selectbox(label='Pick a Pending Submission to be Reviewed:', options=list(self.pending_options.keys()))
-        get_submission_button = st.button(label='Pull Submission Data')
+        if 'reviewed_key' not in st.session_state:
+            st.session_state['reviewed_key'] = False 
+
+        if reset_button:
+            st.session_state['get_sub_key'] = False
+            st.session_state['reviewed_key'] = False 
+
+        self.dr_model.set_Submission_to_Review(self.pending_options[selected_pending_option])
+        table = pd.Series(self.dr_model.submission_review.field_values_dict)
+
         if get_submission_button:
-            st.session_state['get_sub_key'] = not st.session_state['get_sub_key']
-            self.dr_model.set_Submission_to_Review(self.pending_options[selected_pending_option])
-            table = pd.Series(self.dr_model.submission_review.field_values_dict)
+            st.session_state['get_sub_key'] = True
             st.table(table)
+        
+        if st.session_state['get_sub_key']:
+            reviewed = st.selectbox(label='Change Status: ', options=['Leave as Pending', 'Approve', 'Reject'])
+            if st.button(label='Submit to Database'):
+                st.session_state['reviewed_key'] = True
+                if reviewed=='Approve':
+                    record = self.dr_model.create_Approval(user_id)
+                    st.write(record)
+
+                elif reviewed=='Reject':
+                    record = self.dr_model.submission_review.update_Submission(status='Rejected')
+                    st.write(record)
+                else:
+                    st.write('Submission has been left as pending.')
         
 
 
