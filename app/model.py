@@ -58,12 +58,15 @@ class LRP_Model:
         self.approvals = []
 
     def get_data(self):
-        table_name = 'Approvals'
         sql = f"""
-            SELECT 
-                * 
-            FROM 
-                {table_name}
+        SELECT a.ApprovalID, a.ApproverID, fs.SubmissionID, fs.FormID, f.FormName, 
+            fs.SubmissionDate, fs.UserID, sf.FieldValue
+            FROM Form_Submissions fs
+        LEFT JOIN Approvals a on a.SubmissionID
+        LEFT JOIN Submission_Fields sf on fs.SubmissionID
+        LEFT JOIN Forms f on f.FormID = fs.FormID
+            WHERE fs.SubmissionID = sf.SubmissionID
+            AND fs.SubmissionID = a.SubmissionID
         """
         with Database(self.db_config) as db_conn:
             df = db_conn.get_row(sql)
@@ -73,10 +76,13 @@ class LRP_Model:
         for a in df.itertuples():
             approv = Approval()
             approv.approval_id = a.ApprovalID 
-            approv.approval_date = a.ApprovalDate
             approv.submission_id = a.SubmissionID
             approv.approver_id = a.ApproverID
-            approv.retrieve_Submission_Attributes(id=approv.submission_id)
+            approv.retrieve_Form(form_name=a.FormName, form_id=a.FormID)
+            approv.submission_date = a.SubmissionDate
+            approv.user_id = a.UserID
+            approv.field_values_db = a.FieldValue
+            approv.parse_FieldValues_db()
             approvals.append(approv)
 
         self.approvals = approvals
@@ -99,36 +105,48 @@ class LRP_Model:
     
 
     def append_master(self, fv, master_table, index, submission_type, submission_date):
-        
         # utilizing product, skew, package, and milestone values -> create local df and append to master
         product_name = fv['Product_Name']
         skew_name = fv['Skew_Name']
         package_type = fv['Package_Type']
         wla = 0
+        pqs = 0 
         for key in fv.keys():
             if (';' in key) and ('WLA' in key):
                 wla = 1
-                break
+                continue
+            elif (';' in key) and ('PQS' in key):
+                pqs = 1
 
         if wla:
-            milestone_order = ['WLA RtD', 'WLA Test PIYL','WLA Inventory Yield','Pkg Assemb_RtD', \
+            milestone_order = ['WLA RtD', 'WLA Test PIYL','WLA Inventory Yield','Pkg Assemb RtD', \
                                'Pkg Assemb Test PIYL','Pkg Assemb Finish','Pkg Assemb Inventory Yield']
         else: 
             milestone_order = ['Pkg Assemb RtD','Pkg Assemb Test PIYL','Pkg Assemb Finish','Pkg Assemb Inventory Yield']
 
-        for milestone in milestone_order:
-            master_table.loc[index] = [product_name, skew_name, package_type, milestone, \
-                                fv[self.idx_milestone(milestone, 0)], fv[self.idx_milestone(milestone, 1)], \
-                                fv[self.idx_milestone(milestone, 2)], fv[self.idx_milestone(milestone, 3)], \
-                                fv[self.idx_milestone(milestone, 4)], fv[self.idx_milestone(milestone, 5)], \
-                                fv[self.idx_milestone(milestone, 6)], submission_type, submission_date]
-            index+=1
+        if pqs:
+
+            for milestone in milestone_order:
+                master_table.loc[index] = [product_name, skew_name, package_type, milestone, \
+                                    fv[self.idx_milestone(milestone, 0)], fv[self.idx_milestone(milestone, 1)], \
+                                    fv[self.idx_milestone(milestone, 2)], fv[self.idx_milestone(milestone, 3)], \
+                                    fv[self.idx_milestone(milestone, 4)], fv[self.idx_milestone(milestone, 5)], \
+                                    fv[self.idx_milestone(milestone, 6)], submission_type, submission_date]
+                index+=1
+        else:
+            for milestone in milestone_order:
+                master_table.loc[index] = [product_name, skew_name, package_type, milestone, \
+                                    fv[self.idx_milestone(milestone, 0)], fv[self.idx_milestone(milestone, 1)], \
+                                    fv[self.idx_milestone(milestone, 2)], 'N/A', fv[self.idx_milestone(milestone, 4)], \
+                                    fv[self.idx_milestone(milestone, 5)], fv[self.idx_milestone(milestone, 6)], \
+                                    submission_type, submission_date]
+                index+=1
         return master_table, index
 
     def idx_milestone(self, milestone, prq_timeline_i):
         
         # utilize prq_timeline id and create index for access to milestone values (semi-colon is a critical component)
-        prq_timeline_order = ['PO/ES0', 'ES1', 'ES2', 'QS', 'PQS', 'PRQ', 'PRQ+1Q']
+        prq_timeline_order = ['PO/ES0', 'ES1', 'ES2', 'PQS', 'QS', 'PRQ', 'PRQ+1Q']
         index = milestone + ';' + prq_timeline_order[prq_timeline_i]
             
         return index
@@ -153,16 +171,15 @@ class Data_Review_Model():
         self.pending_submissions = []
 
     def get_Pending_Submissions(self):
-        table_name = 'Form_Submissions'
-        submission_status = 'SubmissionStatus'
         pending = 'Pending'
         sql = f"""
-            SELECT 
-                * 
-            FROM 
-                {table_name}
-            WHERE 
-                {submission_status} = '{pending}'
+            SELECT fs.SubmissionID, fs.FormID, f.FormName, 
+                fs.SubmissionDate, fs.SubmissionStatus, fs.UserID, sf.FieldValue
+            FROM Form_Submissions fs
+            LEFT JOIN Submission_Fields sf on fs.SubmissionID
+            LEFT JOIN Forms f on f.FormID = fs.FormID
+                WHERE fs.SubmissionID = sf.SubmissionID
+                AND fs.SubmissionStatus = '{pending}'
         """
         with Database(self.db_config) as db_conn:
             df = db_conn.get_row(sql)
@@ -170,11 +187,14 @@ class Data_Review_Model():
         submissions = []
         for a in df.itertuples():
             submission = Submission()
-            submission.retrieve_Form(form_id_value=a.FormID)
+            print(a.FormName)
+            print(a.FormID)
+            submission.retrieve_Form(form_name=a.FormName, form_id=a.FormID)
             submission.submission_date = a.SubmissionDate
             submission.submission_status = a.SubmissionStatus
             submission.user_id = a.UserID
             submission.submission_id = a.SubmissionID
+            submission.field_values_db = a.FieldValue
             submissions.append(submission)
 
         self.pending_submissions = submissions
@@ -183,7 +203,7 @@ class Data_Review_Model():
         for sub in self.pending_submissions:
             if sub.submission_id == submission_id:
                 self.submission_review = sub
-                self.submission_review.parse_FieldValues_db(submission_id)
+                self.submission_review.parse_FieldValues_db()
                 return
     
     def create_Approval(self, user_id, field_values_dict):
@@ -207,21 +227,17 @@ class Resubmission_Model():
         self.me_model = Manual_Entry_Model()
         self.rejected_submissions = []
 
-    def get_Rejected_Submissions(self, id):
-        table_name = 'Form_Submissions'
-        submission_status = 'SubmissionStatus'
+    def get_Rejected_Submissions(self, user_id):
         rejected = 'Rejected'
-        user_id = 'UserID'
-
         sql = f"""
-            SELECT 
-                * 
-            FROM 
-                {table_name}
-            WHERE 
-                {submission_status} = '{rejected}'
-            AND 
-                {user_id} = '{id}'
+            SELECT fs.SubmissionID, fs.FormID, f.FormName, 
+                fs.SubmissionDate, fs.SubmissionStatus, fs.UserID, sf.FieldValue
+                FROM Form_Submissions fs
+            LEFT JOIN Submission_Fields sf on fs.SubmissionID
+            LEFT JOIN Forms f on f.FormID = fs.FormID
+                WHERE fs.SubmissionID = sf.SubmissionID
+                AND fs.SubmissionStatus = '{rejected}'
+                AND fs.UserID = '{user_id}'
         """
 
         with Database(self.db_config) as db_conn:
@@ -230,11 +246,12 @@ class Resubmission_Model():
         submissions = []
         for a in df.itertuples():
             submission = Submission()
-            submission.retrieve_Form(form_id_value=a.FormID)
+            submission.retrieve_Form(form_name=a.FormName, form_id=a.FormID)
             submission.submission_date = a.SubmissionDate
             submission.submission_status = a.SubmissionStatus
             submission.user_id = a.UserID
             submission.submission_id = a.SubmissionID
+            submission.field_values_db = a.FieldValue
             submissions.append(submission)
 
         self.rejected_submissions = submissions
@@ -243,7 +260,7 @@ class Resubmission_Model():
         for sub in self.rejected_submissions:
             if sub.submission_id == submission_id:
                 self.submission_resubmit = sub
-                self.submission_resubmit.parse_FieldValues_db(submission_id)
+                self.submission_resubmit.parse_FieldValues_db()
                 return
 
 class Submission():
@@ -362,62 +379,36 @@ class Submission():
         # resets SubmissionStatus.
         self.submission_status = status
     
-    def retrieve_Form(self, form_id_value):
-        form_id = 'FormID'
-        table_name = 'Forms'
-        form_name = 'FormName'
-        sql = f"""
-            SELECT 
-                {form_name}
-            FROM 
-                {table_name}
-            WHERE
-                {form_id} = '{form_id_value}'
-        """
-        with Database(self.db_config) as db_conn:
-            df = db_conn.get_row(sql)
+    def retrieve_Form(self, form_name, form_id):
         
-        self.form = Form(form_name=df[form_name][0])
-        self.form = self.form.get_Form_Attributes(form_id=form_id_value)
+        self.form = Form(form_name=form_name)
+        self.form = self.form.get_Form_Attributes(form_id=form_id)
 
     def retrieve_Submission_Attributes(self, id):
         # get all attributes from database. calls retrieve_Form, and parse_FieldValues_db().
         self.submission_id = id
-        table_name = 'Form_Submissions'
-        submission_id = 'SubmissionID'
         sql = f"""
-            SELECT 
-                *
-            FROM 
-                {table_name}
-            WHERE
-                {submission_id} = '{self.submission_id}'
+            SELECT fs.SubmissionID, fs.FormID, f.FormName, 
+            fs.SubmissionDate, fs.SubmissionStatus, fs.UserID, sf.FieldValue
+            FROM Form_Submissions fs
+            LEFT JOIN Submission_Fields sf on fs.SubmissionID
+            LEFT JOIN Forms f on f.FormID = fs.FormID
+            WHERE fs.SubmissionID = sf.SubmissionID
+            AND fs.SubmissionID = '{self.submission_id}'
         """
         with Database(self.db_config) as db_conn:
             df = db_conn.get_row(sql)
         
-        self.retrieve_Form(form_id_value=df['FormID'])
+        self.retrieve_Form(form_name=df['FormName'], form_id=df['FormID'])
         self.submission_date = df['SubmissionDate']
         self.submission_status = df['SubmissionStatus'] 
         self.user_id = df['UserID']
-        self.parse_FieldValues_db(id)
+        self.field_values_db = df['FieldValue'][0]
+        self.parse_FieldValues_db()
 
-    def parse_FieldValues_db(self, id):
+    def parse_FieldValues_db(self):
         # parse Field Values string based on "," and "=". Create FieldValues dict.
-        self.submission_id = id
-        table_name = 'Submission_Fields'
-        submission_id = 'SubmissionID'
-        sql = f"""
-            SELECT 
-                *
-            FROM 
-                {table_name}
-            WHERE
-                {submission_id} = '{id}'
-        """
-        with Database(self.db_config) as db_conn:
-            df = db_conn.get_row(sql)
-        df_field_value = df.FieldValue[0]
+        df_field_value = self.field_values_db
         split_attrs = df_field_value.split(', ')
         attr_keys = []
         attr_values = []
@@ -500,26 +491,26 @@ class Approval(Submission):
         
         return output_record
 
-    def retrieve_Approval_Attributes(self, id):
-        # retrieve Approval info assuming Approval has been created in database
-        self.approval_id = id
-        table_name = 'Approvals'
-        approval_id = 'Approval_ID'
-        sql = f"""
-            SELECT 
-                * 
-            FROM 
-                {table_name}
-            WHERE
-                {approval_id} = '{self.approval_id}'
-        """
-        with Database(self.db_config) as db_conn:
-            df = db_conn.get_row(sql)
+    # def retrieve_Approval_Attributes(self, id):
+    #     # retrieve Approval info assuming Approval has been created in database
+    #     self.approval_id = id
+    #     table_name = 'Approvals'
+    #     approval_id = 'Approval_ID'
+    #     sql = f"""
+    #         SELECT 
+    #             * 
+    #         FROM 
+    #             {table_name}
+    #         WHERE
+    #             {approval_id} = '{self.approval_id}'
+    #     """
+    #     with Database(self.db_config) as db_conn:
+    #         df = db_conn.get_row(sql)
 
-        self.approver_id = df['ApproverID']
-        self.submission_id = df['SubmissionID']
-        self.approval_date = df['ApprovalDate']
-        self.retrieve_Submission_Attributes(self.submission_id)
+    #     self.approver_id = df['ApproverID']
+    #     self.submission_id = df['SubmissionID']
+    #     self.approval_date = df['ApprovalDate']
+    #     self.retrieve_Submission_Attributes(self.submission_id)
 
     def create_Approval_Quarter(self):
         
@@ -529,13 +520,6 @@ class Approval(Submission):
 
 class Form():
     def __init__(self, form_name):
-        self.db_config =  {
-            'host': f"{os.environ.get('host')}",
-            'port': f"{os.environ.get('portnum')}",
-            'user':f"{os.environ.get('user')}",
-            'passwd':f"{os.environ.get('passwd')}",
-            'db':f"{os.environ.get('db')}"
-        }
         self.fields = None
         self.form_id = None
 

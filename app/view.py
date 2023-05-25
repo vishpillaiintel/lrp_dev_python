@@ -25,27 +25,27 @@ class LRP_View:
         with client:
             st.write("Client")
             df_client = self.df[self.df['Package Type'] == 'Client']
-            self.df_group_by(df_client, 'Product', 'Skew')
+            self.df_group_by(df_client, 'Product Name', 'Skew Name')
         
         with server:
             st.write("Server")
             df_server = self.df[self.df['Package Type'] == 'Server']
-            self.df_group_by(df_server, 'Product', 'Skew')
+            self.df_group_by(df_server, 'Product Name', 'Skew Name')
 
         with graphics:
             st.write("Graphics")
             df_graphics = self.df[self.df['Package Type'] == 'Graphics']
-            self.df_group_by(df_graphics, 'Product', 'Skew')
+            self.df_group_by(df_graphics, 'Product Name', 'Skew Name')
 
         with asic:
             st.write("ASIC")
             df_asic = self.df[self.df['Package Type'] == 'ASIC']
-            self.df_group_by(df_asic, 'Product', 'Skew')
+            self.df_group_by(df_asic, 'Product Name', 'Skew Name')
 
         with psg:
             st.write("PSG")
             df_psg = self.df[self.df['Package Type'] == 'PSG']
-            self.df_group_by(df_psg, 'Product', 'Skew')
+            self.df_group_by(df_psg, 'Product Name', 'Skew Name')
 
 class PA_View():
     def __init__(self):
@@ -495,24 +495,24 @@ class Resubmission_View():
                 skew_name_input = st.text_input(label=self.rs_model.submission_resubmit.form.fields['Skew_Name']['Field_Question'], \
                                             value=self.rs_model.submission_resubmit.field_values_dict['Skew_Name'], key='skew_name_rs_me')
 
-                package_type_input = st.selectbox(label=self.rs_model.submission_resubmit.fields['Package_Type']['Field_Question'], \
+                package_type_input = st.selectbox(label=self.rs_model.submission_resubmit.form.fields['Package_Type']['Field_Question'], \
                                                 options=self.rs_model.submission_resubmit.form.fields['Package_Type']['Field_Selection'], \
                                                 index=self.get_index_selection(self.rs_model.submission_resubmit.form.fields['Package_Type']['Field_Selection'], \
                                                 self.rs_model.submission_resubmit.field_values_dict['Package_Type']), key='package_type_rs_me')
                 
-                die_architect_input = st.selectbox(label=self.rs_model.submission_resubmit.fields['Die_Architecture']['Field_Question'], \
+                die_architect_input = st.selectbox(label=self.rs_model.submission_resubmit.form.fields['Die_Architecture']['Field_Question'], \
                                                 options=self.rs_model.submission_resubmit.form.fields['Die_Architecture']['Field_Selection'], \
                                                 index=self.get_index_selection(self.rs_model.submission_resubmit.form.fields['Die_Architecture']['Field_Selection'], \
                                                 self.rs_model.submission_resubmit.field_values_dict['Die_Architecture']), key='die_arch_rs_me')
                 
                 if die_architect_input == 'Foveros Client' or die_architect_input == 'Co-EMIB':
-                    wla_arch_maturity_input = st.selectbox(label=self.rs_model.submission_resubmit.fields['WLA_Architecture_Maturity']['Field_Question'], \
-                                                        options=self.rs_model.submission_resubmit.fields['WLA_Architecture_Maturity']['Field_Selection'], \
+                    wla_arch_maturity_input = st.selectbox(label=self.rs_model.submission_resubmit.form.fields['WLA_Architecture_Maturity']['Field_Question'], \
+                                                        options=self.rs_model.submission_resubmit.form.fields['WLA_Architecture_Maturity']['Field_Selection'], \
                                                         index=self.get_index_selection(self.rs_model.submission_resubmit.form.fields['WLA_Architecture_Maturity']['Field_Selection'], \
                                                         self.rs_model.submission_resubmit.field_values_dict['WLA_Architecture_Maturity']), key='wla_maturity_rs_me')
 
-                pkg_assemb_maturity_input = st.selectbox(label=self.rs_model.submission_resubmit.fields['Pkg_Assembly_Architecture_Maturity']['Field_Question'], \
-                                                        options=self.rs_model.submission_resubmit.fields['Pkg_Assembly_Architecture_Maturity']['Field_Selection'], \
+                pkg_assemb_maturity_input = st.selectbox(label=self.rs_model.submission_resubmit.form.fields['Pkg_Assembly_Architecture_Maturity']['Field_Question'], \
+                                                        options=self.rs_model.submission_resubmit.form.fields['Pkg_Assembly_Architecture_Maturity']['Field_Selection'], \
                                                         index=self.get_index_selection(self.rs_model.submission_resubmit.form.fields['Pkg_Assembly_Architecture_Maturity']['Field_Selection'], \
                                                         self.rs_model.submission_resubmit.field_values_dict['Pkg_Assembly_Architecture_Maturity']), key='pkg_assemb_maturity_rs_me')
                 
