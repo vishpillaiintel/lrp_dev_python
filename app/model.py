@@ -94,7 +94,7 @@ class LRP_Model:
         
         # initialize dataframe
         lrp_master = pd.DataFrame(columns=["Product Name", "Skew Name", "Package Type", "Milestone", "PO/ES0",  \
-                                           "ES1", "ES2", "PQS", "QS", "PRQ", "PRQ+1Q", "Submission Type", "Date of Submission"])
+                                           "ES1", "ES2", "PQS", "QS", "PRQ", "PRQ+1Q", "Submission Type", "Last LRP Cycle Update"])
         loc_index = 0
 
         # iterate through approvals and add to LRP master dataframe
@@ -131,7 +131,8 @@ class LRP_Model:
                                     fv[self.idx_milestone(milestone, 0)], fv[self.idx_milestone(milestone, 1)], \
                                     fv[self.idx_milestone(milestone, 2)], fv[self.idx_milestone(milestone, 3)], \
                                     fv[self.idx_milestone(milestone, 4)], fv[self.idx_milestone(milestone, 5)], \
-                                    fv[self.idx_milestone(milestone, 6)], submission_type, submission_date]
+                                    fv[self.idx_milestone(milestone, 6)], submission_type, \
+                                    self.get_LRP_Quarter(submission_date=submission_date)]
                 index+=1
         else:
             for milestone in milestone_order:
@@ -139,17 +140,22 @@ class LRP_Model:
                                     fv[self.idx_milestone(milestone, 0)], fv[self.idx_milestone(milestone, 1)], \
                                     fv[self.idx_milestone(milestone, 2)], 'N/A', fv[self.idx_milestone(milestone, 4)], \
                                     fv[self.idx_milestone(milestone, 5)], fv[self.idx_milestone(milestone, 6)], \
-                                    submission_type, submission_date]
+                                    submission_type, self.get_LRP_Quarter(submission_date=submission_date)]
                 index+=1
         return master_table, index
 
     def idx_milestone(self, milestone, prq_timeline_i):
-        
-        # utilize prq_timeline id and create index for access to milestone values (semi-colon is a critical component)
         prq_timeline_order = ['PO/ES0', 'ES1', 'ES2', 'PQS', 'QS', 'PRQ', 'PRQ+1Q']
         index = milestone + ';' + prq_timeline_order[prq_timeline_i]
-            
         return index
+
+    def get_LRP_Quarter(self, submission_date):
+        m = int(submission_date[:2])
+        q = (m-1)//3 + 1
+        y = int(submission_date[6:10])
+        output = 'Q' + str(q) + ' ' + str(y)
+        return output
+        
 
 class Data_Entry_Model():
     def __init__(self):
@@ -187,8 +193,6 @@ class Data_Review_Model():
         submissions = []
         for a in df.itertuples():
             submission = Submission()
-            print(a.FormName)
-            print(a.FormID)
             submission.retrieve_Form(form_name=a.FormName, form_id=a.FormID)
             submission.submission_date = a.SubmissionDate
             submission.submission_status = a.SubmissionStatus
@@ -380,7 +384,6 @@ class Submission():
         self.submission_status = status
     
     def retrieve_Form(self, form_name, form_id):
-        
         self.form = Form(form_name=form_name)
         self.form = self.form.get_Form_Attributes(form_id=form_id)
 
@@ -490,43 +493,18 @@ class Approval(Submission):
             output_record += f'{mycursor.rowcount} record inserted into {table}.'
         
         return output_record
-
-    # def retrieve_Approval_Attributes(self, id):
-    #     # retrieve Approval info assuming Approval has been created in database
-    #     self.approval_id = id
-    #     table_name = 'Approvals'
-    #     approval_id = 'Approval_ID'
-    #     sql = f"""
-    #         SELECT 
-    #             * 
-    #         FROM 
-    #             {table_name}
-    #         WHERE
-    #             {approval_id} = '{self.approval_id}'
-    #     """
-    #     with Database(self.db_config) as db_conn:
-    #         df = db_conn.get_row(sql)
-
-    #     self.approver_id = df['ApproverID']
-    #     self.submission_id = df['SubmissionID']
-    #     self.approval_date = df['ApprovalDate']
-    #     self.retrieve_Submission_Attributes(self.submission_id)
-
-    def create_Approval_Quarter(self):
-        
-        # utilize approval_date to create approval quarter, return approval quarter
-        pass
-
+    
 
 class Form():
     def __init__(self, form_name):
         self.fields = None
-        self.form_id = None
 
-        if 'RoT' in form_name:
+        if 'RoT' in str(form_name):
             self.form_name = 'RoT - Q2 2023'
+            self.form_id = 0
         else:
             self.form_name = 'Manual Entry - Q2 2023'
+            self.form_id = 1
 
     def get_Form_Attributes(self, form_id):
 
@@ -992,7 +970,7 @@ class Manual_Entry_Model:
             PRQ = [self.multiplier(PRQ_Pkg_Assemb_RtD, self.Pkg_Assemb_Maturity, 5), self.multiplier(PRQ_Pkg_Test_PIYL, self.Pkg_Assemb_Maturity, 5), self.multiplier(PRQ_Pkg_Assemb_Finish, self.Pkg_Assemb_Maturity, 5), self.inventory_yield(self.Die_Architecture_Info_val, 0, 5)]
             PRQ_1Q = [self.multiplier(PRQ_Pkg_Assemb_RtD, self.Pkg_Assemb_Maturity, 6), self.multiplier(PRQ_Pkg_Test_PIYL, self.Pkg_Assemb_Maturity, 6), self.multiplier(PRQ_Pkg_Assemb_Finish, self.Pkg_Assemb_Maturity, 6), self.inventory_yield(self.Die_Architecture_Info_val, 0, 6)]
         
-        output_dict = {'Milestone': Milestone, 'PO': PO, 'ES1': ES1, 'ES2': ES2, 'QS': QS, 'PRQ': PRQ, 'PRQ_1Q': PRQ_1Q}
+        output_dict = {'Milestone': Milestone, 'PO/ES0': PO, 'ES1': ES1, 'ES2': ES2, 'QS': QS, 'PRQ': PRQ, 'PRQ_1Q': PRQ_1Q}
         result = pd.DataFrame(output_dict)
         result = result.set_index('Milestone')
 

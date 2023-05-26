@@ -14,8 +14,14 @@ class LRP_View:
         groups = list(grouped_data.groups.keys())
 
         for group in groups:
-            st.write(f"Group: {group}")
             group_data = grouped_data.get_group(group)
+            group_data = group_data.reset_index()
+            st.write(f"{group_data['Product Name'][0]} {group_data['Skew Name'][0]}")
+            group_data = group_data.set_index('Milestone')
+            if str(group_data['PQS'][0]) == 'N/A':
+                group_data = group_data.drop(['Product Name', 'index', 'PQS', 'Skew Name', 'Package Type'], axis=1)
+            else:
+                group_data = group_data.drop(['Product Name', 'index', 'Skew Name', 'Package Type'], axis=1)
             st.dataframe(group_data)
 
     def view(self):
@@ -198,11 +204,11 @@ class Data_Entry_View():
             prq_wla_rtd_input = st.number_input(label='PRQ WLA RtD', min_value=0.0, max_value=100.0, value=99.0, step=0.1, format="%.2f")
             prq_wla_test_input = st.number_input(label='PRQ WLA Test PIYL', min_value=0.0, max_value=100.0, value=99.0, step=0.1, format="%.2f")
             prq_pkg_assemb_rtd_input = st.number_input(label='PRQ Pkg Assemb RtD', min_value=0.0, max_value=100.0, value=99.0, step=0.1, format="%.2f")
-            prq_pkg_test_piyl_input = st.number_input(label='PRQ Pkg Test PIYL', min_value=0.0, max_value=100.0, value=99.0, step=0.1, format="%.2f")
+            prq_pkg_test_piyl_input = st.number_input(label='PRQ Pkg Assemb Test PIYL', min_value=0.0, max_value=100.0, value=99.0, step=0.1, format="%.2f")
             prq_pkg_assemb_finish_input = st.number_input(label='PRQ Pkg Assemb Finish', min_value=0.0, max_value=100.0, value=99.0, step=0.1, format="%.2f")
         else:
             prq_pkg_assemb_rtd_input = st.number_input(label='PRQ Pkg Assemb RtD', min_value=0.0, max_value=100.0, value=99.0, step=0.1, format="%.2f")
-            prq_pkg_test_piyl_input = st.number_input(label='PRQ Pkg Test PIYL', min_value=0.0, max_value=100.0, value=99.0, step=0.1, format="%.2f")
+            prq_pkg_test_piyl_input = st.number_input(label='PRQ Pkg Assemb Test PIYL', min_value=0.0, max_value=100.0, value=99.0, step=0.1, format="%.2f")
             prq_pkg_assemb_finish_input = st.number_input(label='PRQ Pkg Assemb Finish', min_value=0.0, max_value=100.0, value=99.0, step=0.1, format="%.2f")
 
         if 'ME_Button' not in st.session_state:
@@ -292,14 +298,13 @@ class Data_Review_View():
             st.session_state['get_sub_key'] = False
             st.session_state['reviewed_key'] = False 
 
-        self.dr_model.set_Submission_to_Review(self.pending_options[selected_pending_option])
-        table = pd.Series(self.dr_model.submission_review.field_values_dict)
-
         if get_submission_button:
             st.session_state['get_sub_key'] = True
-            st.table(table)
         
         if st.session_state['get_sub_key']:
+            self.dr_model.set_Submission_to_Review(self.pending_options[selected_pending_option])
+            table = pd.Series(self.dr_model.submission_review.field_values_dict)
+            st.table(table)
             reviewed = st.selectbox(label='Change Status: ', options=['Leave as Pending', 'Approve', 'Reject'])
             if st.button(label='Submit to Database'):
                 st.session_state['reviewed_key'] = True
@@ -330,8 +335,16 @@ class Resubmission_View():
         return self.rejected_options
     
     def get_index_selection(self, selection_options, value):
-        return selection_options.index(value)
+        if str(value) == 'None':
+            return 0
+        else:
+            return selection_options.index(value)
     
+    def get_PRQ_value(self, value):
+        if value not in self.rs_model.submission_resubmit.form.fields.values():
+            return 99.0
+        else:
+            return float(self.rs_model.submission_resubmit.form.fields[value])
 
     def view(self):
         st.write('Resubmission')
@@ -349,17 +362,9 @@ class Resubmission_View():
  
         if 'get_sub_rej_key' not in st.session_state:
             st.session_state['get_sub_rej_key'] = False
-        
-        if 'resubmit_key' not in st.session_state:
-            st.session_state['resubmit_key'] = False 
     
         if reset_button:
             st.session_state['get_sub_rej_key'] = False
-            st.session_state['resubmit_key'] = False 
-        
-        def keep_submissions():
-            st.session_state['get_sub_rej_key'] = True
-            return
 
         if get_submission_button:
             st.session_state['get_sub_rej_key'] = not st.session_state['get_sub_rej_key']
@@ -369,8 +374,7 @@ class Resubmission_View():
 
             if 'RoT' in self.rs_model.submission_resubmit.form.form_name:
                 product_name_input = st.text_input(label=self.rs_model.submission_resubmit.form.fields['Product_Name']['Field_Question'], \
-                                                   value=self.rs_model.submission_resubmit.field_values_dict['Product_Name'], key='product_name_rs_rot', \
-                                                    on_change=keep_submissions)
+                                                   value=self.rs_model.submission_resubmit.field_values_dict['Product_Name'], key='product_name_rs_rot')
                 skew_name_input = st.text_input(label=self.rs_model.submission_resubmit.form.fields['Skew_Name']['Field_Question'], 
                                                     value=self.rs_model.submission_resubmit.field_values_dict['Skew_Name'], key='skew_name_rs_rot')
 
@@ -518,37 +522,42 @@ class Resubmission_View():
                 
                 if die_architect_input == 'Foveros Client' or die_architect_input == 'Co-EMIB':
                     prq_wla_rtd_input = st.number_input(label='PRQ WLA RtD', min_value=0.0, max_value=100.0, \
-                                                        value=float(self.rs_model.submission_resubmit.field_values_dict['Pkg_Assembly_Architecture_Maturity']),  \
+                                                        value=self.get_PRQ_value('WLA RtD;PRQ'),  \
                                                         step=0.1, format="%.2f")
                     prq_wla_test_input = st.number_input(label='PRQ WLA Test PIYL', min_value=0.0, max_value=100.0, \
-                                                        value=float(self.rs_model.submission_resubmit.field_values_dict['Pkg_Assembly_Architecture_Maturity']),  \
+                                                        value=self.get_PRQ_value('WLA Test PIYL;PRQ'),  \
                                                         step=0.1, format="%.2f")
                     prq_pkg_assemb_rtd_input = st.number_input(label='PRQ Pkg Assemb RtD', min_value=0.0, max_value=100.0, \
-                                                        value=float(self.rs_model.submission_resubmit.field_values_dict['Pkg_Assembly_Architecture_Maturity']),  \
+                                                        value=self.get_PRQ_value('Pkg Assemb RtD;PRQ'),  \
                                                         step=0.1, format="%.2f")
-                    prq_pkg_test_piyl_input = st.number_input(label='PRQ Pkg Test PIYL', min_value=0.0, max_value=100.0, \
-                                                        value=float(self.rs_model.submission_resubmit.field_values_dict['Pkg_Assembly_Architecture_Maturity']),  \
+                    prq_pkg_test_piyl_input = st.number_input(label='PRQ Pkg Assemb Test PIYL', min_value=0.0, max_value=100.0, \
+                                                        value=self.get_PRQ_value('Pkg Assemb Test PIYL;PRQ'),  \
                                                         step=0.1, format="%.2f")
                     prq_pkg_assemb_finish_input = st.number_input(label='PRQ Pkg Assemb Finish', min_value=0.0, max_value=100.0, \
-                                                        value=float(self.rs_model.submission_resubmit.field_values_dict['Pkg_Assembly_Architecture_Maturity']),  \
+                                                        value=self.get_PRQ_value('Pkg Assemb Finish;PRQ'),  \
                                                         step=0.1, format="%.2f")
                 else:
                     prq_pkg_assemb_rtd_input = st.number_input(label='PRQ Pkg Assemb RtD', min_value=0.0, max_value=100.0, \
-                                                        value=float(self.rs_model.submission_resubmit.field_values_dict['Pkg_Assembly_Architecture_Maturity']),  \
+                                                        value=self.get_PRQ_value('Pkg Assemb RtD;PRQ'),  \
                                                         step=0.1, format="%.2f")
-                    prq_pkg_test_piyl_input = st.number_input(label='PRQ Pkg Test PIYL', min_value=0.0, max_value=100.0, \
-                                                        value=float(self.rs_model.submission_resubmit.field_values_dict['Pkg_Assembly_Architecture_Maturity']),  \
+                    prq_pkg_test_piyl_input = st.number_input(label='PRQ Pkg Assemb Test PIYL', min_value=0.0, max_value=100.0, \
+                                                        value=self.get_PRQ_value('Pkg Assemb Test PIYL;PRQ'),  \
                                                         step=0.1, format="%.2f")
                     prq_pkg_assemb_finish_input = st.number_input(label='PRQ Pkg Assemb Finish', min_value=0.0, max_value=100.0, \
-                                                        value=float(self.rs_model.submission_resubmit.field_values_dict['Pkg_Assembly_Architecture_Maturity']),  \
+                                                        value=self.get_PRQ_value('Pkg Assemb Finish;PRQ'),  \
                                                         step=0.1, format="%.2f")
+
+                record = ''
 
                 if 'ME_RS_Button' not in st.session_state:
                     st.session_state['ME_RS_Button'] = False
 
                 if 'ME_DB_RS_Submission' not in st.session_state:
                     st.session_state['ME_DB_RS_Submission'] = False
-                
+
+                if ('ME_DB_RS_Submission_Disable' not in st.session_state) or (st.session_state['ME_DB_RS_Submission']):
+                    st.session_state['ME_DB_RS_Submission_Disable'] = True           
+
                 if die_architect_input == 'Foveros Client' or die_architect_input == 'Co-EMIB':
                     result, lrp_output = self.rs_model.me_model.lrp_prediction(product_name=product_type_input, skew_name=skew_name_input, pkg_class=package_type_input, \
                                         Die_Architecture_Info_val=die_architect_input, WLA_Maturity=wla_arch_maturity_input, \
@@ -562,15 +571,24 @@ class Resubmission_View():
                                     PRQ_WLA_Test_PIYL=None, PRQ_Pkg_Assemb_RtD=prq_pkg_assemb_rtd_input, \
                                     PRQ_Pkg_Test_PIYL=prq_pkg_test_piyl_input, PRQ_Pkg_Assemb_Finish=prq_pkg_assemb_finish_input)
 
-                if st.button('Run Data Prediction', key='run_prediction_rs_me'):
-                    st.session_state['ME_RS_Button'] = not st.session_state['ME_Button']
+
+                run_prediction =  st.button('Run Data Prediction', key='run_prediction_rs_me')
+                if run_prediction:
+                    st.session_state['ME_RS_Button'] = True
+                    st.session_state['ME_DB_RS_Submission_Disable'] = False
                     st.write(f'Product Name: {product_type_input} {skew_name_input}')
                     st.write(f'Package Type: {package_type_input}')
                     st.dataframe(result)
                 
                 if st.session_state['ME_RS_Button']:
-                    if st.button('Submit to Database?', key='submit_database_rs_me'):
-                        st.session_state['ME_DB_RS_Submission'] = not st.session_state['ME_DB_RS_Submission']        
-                        field_values_dict = lrp_output
-                        record = self.rs_model.submission_resubmit.update_Submission(status='Pending', field_values_dict=field_values_dict)
-                        st.write(record)
+                    submit_database = st.button('Submit to Database?', key='submit_database_rs_me', \
+                                 disabled=st.session_state['ME_DB_RS_Submission_Disable'])
+                    
+                    if submit_database:
+                        with st.spinner('Writing to Database...'):
+                            field_values_dict = lrp_output
+                            record = self.rs_model.submission_resubmit.update_Submission(status='Pending', field_values_dict=field_values_dict)              
+                            st.write(record)
+                            st.session_state['get_sub_rej_key'] = False
+                            st.session_state['ME_RS_Button'] = False
+
