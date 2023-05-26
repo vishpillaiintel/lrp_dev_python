@@ -866,6 +866,7 @@ class RoT_Model:
             result.loc[1.5] = [self.inventory_yield(Die_Architecture_Info_val=self.die_architect_input, is_wla=1, val=i) for i in range(1,7)]
             result.loc[len(result.index)] = [self.inventory_yield(Die_Architecture_Info_val=self.die_architect_input, is_wla=0, val=i) for i in range(1,7)]
             result = result.sort_index()
+            result.columns = ['PO/ES0', 'ES1', 'ES2', 'QS', 'PRQ', 'PRQ+1Q']
             result.index = ["WLA RtD", "WLA Test PIYL", "WLA Inventory Yield", "Pkg Assemb RtD", "Pkg Assemb Test PIYL", "Pkg Assemb Finish", "Pkg Assemb Inventory Yield"]
         
         self.lrp_output['Product_Name'] = product_name
@@ -970,8 +971,8 @@ class Manual_Entry_Model:
             PRQ = [self.multiplier(PRQ_Pkg_Assemb_RtD, self.Pkg_Assemb_Maturity, 5), self.multiplier(PRQ_Pkg_Test_PIYL, self.Pkg_Assemb_Maturity, 5), self.multiplier(PRQ_Pkg_Assemb_Finish, self.Pkg_Assemb_Maturity, 5), self.inventory_yield(self.Die_Architecture_Info_val, 0, 5)]
             PRQ_1Q = [self.multiplier(PRQ_Pkg_Assemb_RtD, self.Pkg_Assemb_Maturity, 6), self.multiplier(PRQ_Pkg_Test_PIYL, self.Pkg_Assemb_Maturity, 6), self.multiplier(PRQ_Pkg_Assemb_Finish, self.Pkg_Assemb_Maturity, 6), self.inventory_yield(self.Die_Architecture_Info_val, 0, 6)]
         
-        output_dict = {'Milestone': Milestone, 'PO/ES0': PO, 'ES1': ES1, 'ES2': ES2, 'QS': QS, 'PRQ': PRQ, 'PRQ_1Q': PRQ_1Q}
-        result = pd.DataFrame(output_dict)
+        output_dict = {'Milestone': Milestone, 'PO/ES0': PO, 'ES1': ES1, 'ES2': ES2, 'QS': QS, 'PRQ': PRQ, 'PRQ+1Q': PRQ_1Q}
+        result = pd.DataFrame(output_dict, columns=['Milestone', 'PO/ES0', 'ES1', 'ES2', 'QS', 'PRQ', 'PRQ+1Q'])
         result = result.set_index('Milestone')
 
         self.lrp_output['Product_Name'] = product_name

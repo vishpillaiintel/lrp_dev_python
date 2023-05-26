@@ -164,12 +164,15 @@ class Data_Entry_View():
 
         if st.session_state['RoT_Button']:
             if st.button('Submit to Database?'):
-                st.session_state['DB_Submission'] = not st.session_state['DB_Submission']        
-                user_id='vpillai'
-                field_values_dict = lrp_output
-                self.de_model.submission.set_Submission_Attributes(user_id=user_id, field_values_dict=field_values_dict)
-                record = self.de_model.submission.publish_Submission()
-                st.write(record)
+                with st.spinner('Writing to Database...'):
+                    st.session_state['DB_Submission'] = not st.session_state['DB_Submission']        
+                    user_id='vpillai'
+                    field_values_dict = lrp_output
+                    self.de_model.submission.set_Submission_Attributes(user_id=user_id, field_values_dict=field_values_dict)
+                    record = self.de_model.submission.publish_Submission()
+                    st.write(record)
+                st.session_state['RoT_Button'] = False
+
 
     def me_view(self):
         st.write('LRP Data Update: Manual Entry')
@@ -213,9 +216,6 @@ class Data_Entry_View():
 
         if 'ME_Button' not in st.session_state:
             st.session_state['ME_Button'] = False
-
-        if 'ME_DB_Submission' not in st.session_state:
-            st.session_state['ME_DB_Submission'] = False
         
         if die_architect_input == 'Foveros Client' or die_architect_input == 'Co-EMIB':
             result, lrp_output = self.de_model.me_model.lrp_prediction(product_name=product_type_input, skew_name=skew_name_input, pkg_class=package_type_input, \
@@ -231,19 +231,20 @@ class Data_Entry_View():
                             PRQ_Pkg_Test_PIYL=prq_pkg_test_piyl_input, PRQ_Pkg_Assemb_Finish=prq_pkg_assemb_finish_input)
 
         if st.button('Run Data Prediction', key='run_prediction_me'):
-            st.session_state['ME_Button'] = not st.session_state['ME_Button']
+            st.session_state['ME_Button'] = True
             st.write(f'Product Name: {product_type_input} {skew_name_input}')
             st.write(f'Package Type: {package_type_input}')
             st.dataframe(result)
         
         if st.session_state['ME_Button']:
             if st.button('Submit to Database?', key='submit_database_me'):
-                st.session_state['ME_DB_Submission'] = not st.session_state['ME_DB_Submission']        
-                user_id='vpillai'
-                field_values_dict = lrp_output
-                self.de_model.submission.set_Submission_Attributes(user_id=user_id, field_values_dict=field_values_dict)
-                record = self.de_model.submission.publish_Submission()
-                st.write(record)
+                with st.spinner('Writing to Database...'):
+                    user_id='vpillai'
+                    field_values_dict = lrp_output
+                    self.de_model.submission.set_Submission_Attributes(user_id=user_id, field_values_dict=field_values_dict)
+                    record = self.de_model.submission.publish_Submission()
+                    st.write(record)
+                st.session_state['ME_Button'] = False
 
     def view(self):
         st.write("Data Entry")
@@ -279,45 +280,44 @@ class Data_Review_View():
         user_id = 'vpillai' 
 
         self.create_pending_options()
-        selected_pending_option = st.selectbox(label='Pick a Pending Submission to be Reviewed:', options=list(self.pending_options.keys()))
+        options=list(self.pending_options.keys())
+        selected_pending_option = st.selectbox(label='Pick a Pending Submission to be Reviewed:', options=options)
         
         col1, col2 = st.columns([1,1], gap='small')
 
-        with col1:
-            get_submission_button = st.button(label='Pull Data for Review')
-        with col2:
-            reset_button = st.button(label='Reset')
+        if options:
+            with col1:
+                get_submission_button = st.button(label='Pull Data for Review')
+            with col2:
+                reset_button = st.button(label='Reset')
         
         if 'get_sub_key' not in st.session_state:
             st.session_state['get_sub_key'] = False
-        
-        if 'reviewed_key' not in st.session_state:
-            st.session_state['reviewed_key'] = False 
 
-        if reset_button:
+        if options and reset_button:
             st.session_state['get_sub_key'] = False
-            st.session_state['reviewed_key'] = False 
 
-        if get_submission_button:
+        if options and get_submission_button:
             st.session_state['get_sub_key'] = True
         
-        if st.session_state['get_sub_key']:
+        if options and st.session_state['get_sub_key']:
             self.dr_model.set_Submission_to_Review(self.pending_options[selected_pending_option])
             table = pd.Series(self.dr_model.submission_review.field_values_dict)
             st.table(table)
-            reviewed = st.selectbox(label='Change Status: ', options=['Leave as Pending', 'Approve', 'Reject'])
-            if st.button(label='Submit to Database'):
-                st.session_state['reviewed_key'] = True
+            reviewed = st.selectbox(label='Change Status: ', options=['Leave as Pending', 'Approve', 'Reject'], index=0)
+            if st.button(label='Submit to Database', key='Review_DB'):
                 if reviewed=='Approve':
-                    record = self.dr_model.create_Approval(user_id=user_id, field_values_dict=self.dr_model.submission_review.field_values_dict)
-                    st.write(record)
+                    with st.spinner('Writing to Database...'):
+                        record = self.dr_model.create_Approval(user_id=user_id, field_values_dict=self.dr_model.submission_review.field_values_dict)
+                        st.write(record)
 
                 elif reviewed=='Reject':
-                    record = self.dr_model.submission_review.update_Submission(status='Rejected', field_values_dict=self.dr_model.submission_review.field_values_dict)
-                    st.write(record)
+                    with st.spinner('Writing to Database...'):
+                        record = self.dr_model.submission_review.update_Submission(status='Rejected', field_values_dict=self.dr_model.submission_review.field_values_dict)
+                        st.write(record)
                 else:
                     st.write('Submission has been left as pending.')
-        
+                st.session_state['get_sub_key'] = False
 
 
 class Resubmission_View():
@@ -340,11 +340,11 @@ class Resubmission_View():
         else:
             return selection_options.index(value)
     
-    def get_PRQ_value(self, value):
-        if value not in self.rs_model.submission_resubmit.form.fields.values():
+    def get_PRQ_value(self, key):
+        if key not in self.rs_model.submission_resubmit.field_values_dict:
             return 99.0
         else:
-            return float(self.rs_model.submission_resubmit.form.fields[value])
+            return float(self.rs_model.submission_resubmit.field_values_dict[key])
 
     def view(self):
         st.write('Resubmission')
@@ -352,24 +352,26 @@ class Resubmission_View():
         # hardcoding user, need to update later with SSO
         user_id = 'vpillai' 
         self.create_rejected_options(user_id)
-        selected_rejected_option = st.selectbox(label='Pick a Rejected Submission to be Resubmitted:', options=list(self.rejected_options.keys()))
+        options=list(self.rejected_options.keys())
+        selected_rejected_option = st.selectbox(label='Pick a Rejected Submission to be Resubmitted:', options=options)
         col1, col2 = st.columns([1,1], gap='small')
 
-        with col1:
-            get_submission_button = st.button(label='Pull Data for Resubmission')
-        with col2:
-            reset_button = st.button(label='Reset', key='Resubmit')
+        if options:
+            with col1:
+                get_submission_button = st.button(label='Pull Data for Resubmission')
+            with col2:
+                reset_button = st.button(label='Reset', key='Resubmit')
  
         if 'get_sub_rej_key' not in st.session_state:
             st.session_state['get_sub_rej_key'] = False
     
-        if reset_button:
+        if options and reset_button:
             st.session_state['get_sub_rej_key'] = False
 
-        if get_submission_button:
+        if options and get_submission_button:
             st.session_state['get_sub_rej_key'] = not st.session_state['get_sub_rej_key']
 
-        if st.session_state['get_sub_rej_key']:   
+        if options and st.session_state['get_sub_rej_key']:   
             self.rs_model.set_Submission_to_Resubmit(self.rejected_options[selected_rejected_option])
 
             if 'RoT' in self.rs_model.submission_resubmit.form.form_name:
@@ -469,8 +471,8 @@ class Resubmission_View():
                 if 'RoT_RS_Button' not in st.session_state:
                     st.session_state['RoT_RS_Button'] = False
 
-                if 'DB_RS_RoT_Submission' not in st.session_state:
-                    st.session_state['DB_RS_RoT_Submission'] = False
+                if 'RoT_DB_RS_Submission_Disable' not in st.session_state:
+                    st.session_state['RoT_DB_RS_Submission_Disable'] = True
 
                 result, lrp_output = self.rs_model.rot_model.lrp_prediction(product_name=product_name_input, skew_name=skew_name_input, chiplet_num=chiplet_num, \
                                                     pkg_type=package_type_estim_input, pkg_class=package_type_input, main_num=num_main, exist_emib=exist_emib_input, \
@@ -480,18 +482,23 @@ class Resubmission_View():
                                                     exist_hbm_input_val=exist_hbm, die_architect_input_val=die_architect_input, type_num_satellite_input_val=type_num_satellite, \
                                                     architecture_maturity_val=architecture_maturity_input)
                 
-                if st.button('Run Data Prediction', key = 'run_prediction_rs_rot'):
-                    st.session_state['RoT_RS_Button'] = not st.session_state['RoT_RS_Button']
+                run_prediction = st.button('Run Data Prediction', key = 'run_prediction_rs_rot')
+                if run_prediction:
+                    st.session_state['RoT_RS_Button'] = True
+                    st.session_state['RoT_DB_RS_Submission_Disable'] = False
                     st.write(f'Product Name: {product_name_input} {skew_name_input}')
                     st.write(f'Package Type: {package_type_input}')
                     st.dataframe(result)
 
                 if st.session_state['RoT_RS_Button']:
-                    if st.button('Submit to Database?', key='submit_database_rs_rot'):
-                        st.session_state['DB_RS_RoT_Submission'] = not st.session_state['DB_RS_RoT_Submission']        
-                        field_values_dict = lrp_output
-                        record = self.rs_model.submission_resubmit.update_Submission(status='Pending', field_values_dict=field_values_dict)
-                        st.write(record)
+                    submit_database = st.button('Submit to Database?', key='submit_database_rs_rot', disabled=st.session_state['RoT_DB_RS_Submission_Disable'])
+                    if submit_database:
+                        with st.spinner('Writing to Database...'):
+                            field_values_dict = lrp_output
+                            record = self.rs_model.submission_resubmit.update_Submission(status='Pending', field_values_dict=field_values_dict)
+                            st.write(record)
+                            st.session_state['get_sub_rej_key'] = False
+                            st.session_state['RoT_RS_Button'] = False
             else:
                 product_type_input = st.text_input(label=self.rs_model.submission_resubmit.form.fields['Product_Name']['Field_Question'],  \
                                                    value=self.rs_model.submission_resubmit.field_values_dict['Product_Name'], key='product_name_rs_me')
@@ -552,10 +559,7 @@ class Resubmission_View():
                 if 'ME_RS_Button' not in st.session_state:
                     st.session_state['ME_RS_Button'] = False
 
-                if 'ME_DB_RS_Submission' not in st.session_state:
-                    st.session_state['ME_DB_RS_Submission'] = False
-
-                if ('ME_DB_RS_Submission_Disable' not in st.session_state) or (st.session_state['ME_DB_RS_Submission']):
+                if ('ME_DB_RS_Submission_Disable' not in st.session_state):
                     st.session_state['ME_DB_RS_Submission_Disable'] = True           
 
                 if die_architect_input == 'Foveros Client' or die_architect_input == 'Co-EMIB':
