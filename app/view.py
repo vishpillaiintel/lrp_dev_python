@@ -67,81 +67,82 @@ class Data_Entry_View():
 
     def rot_view(self):
         st.write('LRP Data Update: RoT')
-        st.write('General Information')
         self.de_model.submission.create_Form('RoT')
-        
-        product_name_input = st.text_input(label=self.de_model.submission.form.fields['Product_Name']['Field_Question'], value='', key='product_name_rot')
-        optional_skew_checkbox_input = st.checkbox(label=self.de_model.submission.form.fields['Skew_Name']['Field_Question'], key='optional_skew_rot')
 
-        if optional_skew_checkbox_input:
-            skew_name_input = st.text_input(label='Skew Name', value='', key='skew_name_rot')
-        else:
-            skew_name_input = ''
+        col1, col2 = st.columns(2)
 
-        package_type_input = st.selectbox(label=self.de_model.submission.form.fields['Package_Type']['Field_Question'], \
-                                          options=self.de_model.submission.form.fields['Package_Type']['Field_Selection'], key='package_type_rot')
-        
-        package_type_estim_input = st.selectbox(label=self.de_model.submission.form.fields['Package_Type_Estimation']['Field_Question'], \
-                                          options=self.de_model.submission.form.fields['Package_Type_Estimation']['Field_Selection'], key='package_type_estimation_rot')
-        
-        num_main = st.number_input(label=self.de_model.submission.form.fields['Number_of_Main_Die']['Field_Question'], \
-                                    min_value=self.de_model.submission.form.fields['Number_of_Main_Die']['Min_Value'], \
-                                    max_value=self.de_model.submission.form.fields['Number_of_Main_Die']['Max_Value'], \
-                                    value=self.de_model.submission.form.fields['Number_of_Main_Die']['Default_Value'], key='num_main_rot')
-        
-        exist_emib_input = st.selectbox(label=self.de_model.submission.form.fields['Exist_EMIB']['Field_Question'], \
-                                        options=self.de_model.submission.form.fields['Exist_EMIB']['Field_Selection'], key='exist_emib_rot')
-        
-        exist_point_input = st.selectbox(label=self.de_model.submission.form.fields['Exist_POINT']['Field_Question'], \
-                                        options=self.de_model.submission.form.fields['Exist_POINT']['Field_Selection'], key='exist_point_rot')
+        with col1:
+            st.write(':blue[General Information]')
 
-        st.write('WLA Information') 
-        wla_architect_input = st.selectbox(label=self.de_model.submission.form.fields['WLA_Architecture']['Field_Question'], \
-                                            options=self.de_model.submission.form.fields['WLA_Architecture']['Field_Selection'], key='wla_architect_rot')
-        
-        chiplet_num = st.number_input(label=self.de_model.submission.form.fields['Number_of_Chiplet_Base_Die']['Field_Question'], \
-                                    min_value=self.de_model.submission.form.fields['Number_of_Chiplet_Base_Die']['Min_Value'], \
-                                    max_value=self.de_model.submission.form.fields['Number_of_Chiplet_Base_Die']['Max_Value'], \
-                                    value=self.de_model.submission.form.fields['Number_of_Chiplet_Base_Die']['Default_Value'], key='chiplet_num_rot')
-        
-        dow_architect_input = 'No WLA'
-        odi_chiplet_size_input = 'No WLA'
-        hbi_architect_input = 'No WLA'
-        signal_area_hbi = 0
-        if wla_architect_input == 'Foveros DoW':
-            dow_architect_input = st.selectbox(label=self.de_model.submission.form.fields['DoW_Architecture']['Field_Question'], \
-                                            options=self.de_model.submission.form.fields['DoW_Architecture']['Field_Selection'], key='dow_architect_rot')
-        elif wla_architect_input == 'ODI':
-            odi_chiplet_size_input = st.selectbox(label=self.de_model.submission.form.fields['ODI_Chiplet_Size']['Field_Question'], \
-                                            options=self.de_model.submission.form.fields['ODI_Chiplet_Size']['Field_Selection'], key='odi_chiplet_size_rot')
-        elif wla_architect_input == 'HBI':
-            hbi_architect_input = st.selectbox(label=self.de_model.submission.form.fields['HBI_Architecture']['Field_Question'], \
-                                            options=self.de_model.submission.form.fields['HBI_Architecture']['Field_Selection'], key='hbi_architect_rot')
+            product_name_input = st.text_input(label=self.de_model.submission.form.fields['Product_Name']['Field_Question'], value='', key='product_name_rot')
+            optional_skew_checkbox_input = st.checkbox(label=self.de_model.submission.form.fields['Skew_Name']['Field_Question'], key='optional_skew_rot')
+
+            if optional_skew_checkbox_input:
+                skew_name_input = st.text_input(label='Skew Name', value='', key='skew_name_rot')
+            else:
+                skew_name_input = ''
+
+            package_type_input = st.selectbox(label=self.de_model.submission.form.fields['Package_Type']['Field_Question'], \
+                                            options=self.de_model.submission.form.fields['Package_Type']['Field_Selection'], key='package_type_rot')
             
-            signal_area_hbi = st.number_input(label=self.de_model.submission.form.fields['Signal_Area']['Field_Question'], \
-                                    min_value=self.de_model.submission.form.fields['Signal_Area']['Min_Value'], \
-                                    max_value=self.de_model.submission.form.fields['Signal_Area']['Max_Value'], \
-                                    value=self.de_model.submission.form.fields['Signal_Area']['Default_Value'], key='signal_area_rot')
-
-        st.write('Other Information')
-        die_architect_input = st.selectbox(label=self.de_model.submission.form.fields['Die_Architecture_Summary']['Field_Question'], \
-                                         options=self.de_model.submission.form.fields['Die_Architecture_Summary']['Field_Selection'], key='die_architect_rot')
-        
-        type_num_satellite = st.number_input(label=self.de_model.submission.form.fields['Number_of_Satellite_Die']['Field_Question'], \
-                                             min_value=self.de_model.submission.form.fields['Number_of_Satellite_Die']['Min_Value'], \
-                                             max_value=self.de_model.submission.form.fields['Number_of_Satellite_Die']['Max_Value'], \
-                                             value=self.de_model.submission.form.fields['Number_of_Satellite_Die']['Default_Value'], key='type_num_satellite_rot')
-        
-        exist_hbm = st.selectbox(label=self.de_model.submission.form.fields['Exist_HBM']['Field_Question'], \
-                                  options=self.de_model.submission.form.fields['Exist_HBM']['Field_Selection'], key='exist_hbm_rot')
-        
-        lifetime_volume = st.selectbox(label=self.de_model.submission.form.fields['Lifetime_Volume']['Field_Question'], \
-                                    options=self.de_model.submission.form.fields['Lifetime_Volume']['Field_Selection'], key='lifetime_vol_rot')
-
-        architecture_maturity_input = st.selectbox(label=self.de_model.submission.form.fields['Architecture_Maturity']['Field_Question'], \
-                                    options=self.de_model.submission.form.fields['Architecture_Maturity']['Field_Selection'], key='architecture_mat_rot')
+            package_type_estim_input = st.selectbox(label=self.de_model.submission.form.fields['Package_Type_Estimation']['Field_Question'], \
+                                            options=self.de_model.submission.form.fields['Package_Type_Estimation']['Field_Selection'], key='package_type_estimation_rot')
             
+            num_main = st.number_input(label=self.de_model.submission.form.fields['Number_of_Main_Die']['Field_Question'], \
+                                        min_value=self.de_model.submission.form.fields['Number_of_Main_Die']['Min_Value'], \
+                                        max_value=self.de_model.submission.form.fields['Number_of_Main_Die']['Max_Value'], \
+                                        value=self.de_model.submission.form.fields['Number_of_Main_Die']['Default_Value'], key='num_main_rot')
+            exist_emib_input = st.selectbox(label=self.de_model.submission.form.fields['Exist_EMIB']['Field_Question'], \
+                                            options=self.de_model.submission.form.fields['Exist_EMIB']['Field_Selection'], key='exist_emib_rot')
+            
+            exist_point_input = st.selectbox(label=self.de_model.submission.form.fields['Exist_POINT']['Field_Question'], \
+                                            options=self.de_model.submission.form.fields['Exist_POINT']['Field_Selection'], key='exist_point_rot')
+        with col2:
+            st.write(':blue[WLA Information]') 
+            wla_architect_input = st.selectbox(label=self.de_model.submission.form.fields['WLA_Architecture']['Field_Question'], \
+                                                options=self.de_model.submission.form.fields['WLA_Architecture']['Field_Selection'], key='wla_architect_rot')
+            
+            chiplet_num = st.number_input(label=self.de_model.submission.form.fields['Number_of_Chiplet_Base_Die']['Field_Question'], \
+                                        min_value=self.de_model.submission.form.fields['Number_of_Chiplet_Base_Die']['Min_Value'], \
+                                        max_value=self.de_model.submission.form.fields['Number_of_Chiplet_Base_Die']['Max_Value'], \
+                                        value=self.de_model.submission.form.fields['Number_of_Chiplet_Base_Die']['Default_Value'], key='chiplet_num_rot')
+            
+            dow_architect_input = 'No WLA'
+            odi_chiplet_size_input = 'No WLA'
+            hbi_architect_input = 'No WLA'
+            signal_area_hbi = 0
+            if wla_architect_input == 'Foveros DoW':
+                dow_architect_input = st.selectbox(label=self.de_model.submission.form.fields['DoW_Architecture']['Field_Question'], \
+                                                options=self.de_model.submission.form.fields['DoW_Architecture']['Field_Selection'], key='dow_architect_rot')
+            elif wla_architect_input == 'ODI':
+                odi_chiplet_size_input = st.selectbox(label=self.de_model.submission.form.fields['ODI_Chiplet_Size']['Field_Question'], \
+                                                options=self.de_model.submission.form.fields['ODI_Chiplet_Size']['Field_Selection'], key='odi_chiplet_size_rot')
+            elif wla_architect_input == 'HBI':
+                hbi_architect_input = st.selectbox(label=self.de_model.submission.form.fields['HBI_Architecture']['Field_Question'], \
+                                                options=self.de_model.submission.form.fields['HBI_Architecture']['Field_Selection'], key='hbi_architect_rot')
+                
+                signal_area_hbi = st.number_input(label=self.de_model.submission.form.fields['Signal_Area']['Field_Question'], \
+                                        min_value=self.de_model.submission.form.fields['Signal_Area']['Min_Value'], \
+                                        max_value=self.de_model.submission.form.fields['Signal_Area']['Max_Value'], \
+                                        value=self.de_model.submission.form.fields['Signal_Area']['Default_Value'], key='signal_area_rot')
+            st.write(':blue[Other Information]')
+            die_architect_input = st.selectbox(label=self.de_model.submission.form.fields['Die_Architecture_Summary']['Field_Question'], \
+                                            options=self.de_model.submission.form.fields['Die_Architecture_Summary']['Field_Selection'], key='die_architect_rot')
+            
+            type_num_satellite = st.number_input(label=self.de_model.submission.form.fields['Number_of_Satellite_Die']['Field_Question'], \
+                                                min_value=self.de_model.submission.form.fields['Number_of_Satellite_Die']['Min_Value'], \
+                                                max_value=self.de_model.submission.form.fields['Number_of_Satellite_Die']['Max_Value'], \
+                                                value=self.de_model.submission.form.fields['Number_of_Satellite_Die']['Default_Value'], key='type_num_satellite_rot')
+            
+            exist_hbm = st.selectbox(label=self.de_model.submission.form.fields['Exist_HBM']['Field_Question'], \
+                                    options=self.de_model.submission.form.fields['Exist_HBM']['Field_Selection'], key='exist_hbm_rot')
+            
+            lifetime_volume = st.selectbox(label=self.de_model.submission.form.fields['Lifetime_Volume']['Field_Question'], \
+                                        options=self.de_model.submission.form.fields['Lifetime_Volume']['Field_Selection'], key='lifetime_vol_rot')
 
+            architecture_maturity_input = st.selectbox(label=self.de_model.submission.form.fields['Architecture_Maturity']['Field_Question'], \
+                                        options=self.de_model.submission.form.fields['Architecture_Maturity']['Field_Selection'], key='architecture_mat_rot')
+                
         if 'RoT_Button' not in st.session_state:
             st.session_state['RoT_Button'] = False
 
@@ -155,23 +156,25 @@ class Data_Entry_View():
                                             odi_chiplet_size=odi_chiplet_size_input, hbi_architect=hbi_architect_input, signal_area_hbi=signal_area_hbi,  \
                                             exist_hbm_input_val=exist_hbm, die_architect_input_val=die_architect_input, type_num_satellite_input_val=type_num_satellite, \
                                             architecture_maturity_val=architecture_maturity_input)
-        
-        if st.button('Run Data Prediction'):
-            st.session_state['RoT_Button'] = not st.session_state['RoT_Button']
-            st.write(f'Product Name: {product_name_input} {skew_name_input}')
-            st.write(f'Package Type: {package_type_input}')
-            st.dataframe(result)
 
-        if st.session_state['RoT_Button']:
-            if st.button('Submit to Database?'):
-                with st.spinner('Writing to Database...'):
-                    st.session_state['DB_Submission'] = not st.session_state['DB_Submission']        
-                    user_id='vpillai'
-                    field_values_dict = lrp_output
-                    self.de_model.submission.set_Submission_Attributes(user_id=user_id, field_values_dict=field_values_dict)
-                    record = self.de_model.submission.publish_Submission()
-                    st.write(record)
-                st.session_state['RoT_Button'] = False
+        with col1:
+
+            if st.button('Run Data Prediction'):
+                st.session_state['RoT_Button'] = not st.session_state['RoT_Button']
+                st.write(f'Product Name: {product_name_input} {skew_name_input}')
+                st.write(f'Package Type: {package_type_input}')
+                st.dataframe(result)
+
+            if st.session_state['RoT_Button']:
+                if st.button('Submit to Database?'):
+                    with st.spinner('Writing to Database...'):
+                        st.session_state['DB_Submission'] = not st.session_state['DB_Submission']        
+                        user_id='vpillai'
+                        field_values_dict = lrp_output
+                        self.de_model.submission.set_Submission_Attributes(user_id=user_id, field_values_dict=field_values_dict)
+                        record = self.de_model.submission.publish_Submission()
+                        st.write(record)
+                    st.session_state['RoT_Button'] = False
 
 
     def me_view(self):
@@ -229,7 +232,7 @@ class Data_Entry_View():
                             Pkg_Assemb_Maturity=pkg_assemb_maturity_input, PRQ_WLA_RtD=None, \
                             PRQ_WLA_Test_PIYL=None, PRQ_Pkg_Assemb_RtD=prq_pkg_assemb_rtd_input, \
                             PRQ_Pkg_Test_PIYL=prq_pkg_test_piyl_input, PRQ_Pkg_Assemb_Finish=prq_pkg_assemb_finish_input)
-
+        
         if st.button('Run Data Prediction', key='run_prediction_me'):
             st.session_state['ME_Button'] = True
             st.write(f'Product Name: {product_type_input} {skew_name_input}')
