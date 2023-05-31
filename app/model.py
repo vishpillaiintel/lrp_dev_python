@@ -46,7 +46,7 @@ class Database(object):
 
 
 class LRP_Model:
-    def __init__(self):
+    def __init__(self, mode):
         print(os.environ.get('host'))
         self.db_config =  {
             'host': f"{os.environ.get('host')}",
@@ -56,15 +56,22 @@ class LRP_Model:
             'db':f"{os.environ.get('db')}"
         }
         self.approvals = []
+        self.mode = mode
 
     def get_data(self):
+        
+        if self.mode == 'dev':
+            table_choice = '_dev'
+        else:
+            table_choice = ''
+
         sql = f"""
         SELECT a.ApprovalID, a.ApproverID, fs.SubmissionID, fs.FormID, f.FormName, 
             fs.SubmissionDate, fs.UserID, sf.FieldValue
-            FROM Form_Submissions fs
-        LEFT JOIN Approvals a on a.SubmissionID
-        LEFT JOIN Submission_Fields sf on fs.SubmissionID
-        LEFT JOIN Forms f on f.FormID = fs.FormID
+            FROM Form_Submissions{table_choice} fs
+        LEFT JOIN Approvals{table_choice} a on a.SubmissionID
+        LEFT JOIN Submission_Fields{table_choice} sf on fs.SubmissionID
+        LEFT JOIN Forms{table_choice} f on f.FormID = fs.FormID
             WHERE fs.SubmissionID = sf.SubmissionID
             AND fs.SubmissionID = a.SubmissionID
         """
@@ -74,7 +81,7 @@ class LRP_Model:
         approvals = []
 
         for a in df.itertuples():
-            approv = Approval()
+            approv = Approval(mode=self.mode)
             approv.approval_id = a.ApprovalID 
             approv.submission_id = a.SubmissionID
             approv.approver_id = a.ApproverID
@@ -158,13 +165,14 @@ class LRP_Model:
         
 
 class Data_Entry_Model():
-    def __init__(self):
-        self.submission = Submission()
+    def __init__(self, mode):
+        self.submission = Submission(mode=mode)
         self.rot_model = RoT_Model()
         self.me_model = Manual_Entry_Model()
+        self.mode = mode
 
 class Data_Review_Model():
-    def __init__(self):
+    def __init__(self, mode):
         self.db_config =  {
             'host': f"{os.environ.get('host')}",
             'port': f"{os.environ.get('portnum')}",
@@ -175,15 +183,22 @@ class Data_Review_Model():
         self.rot_model = RoT_Model()
         self.me_model = Manual_Entry_Model()
         self.pending_submissions = []
+        self.mode = mode
 
     def get_Pending_Submissions(self):
+        
+        if self.mode == 'dev':
+            table_choice = '_dev'
+        else:
+            table_choice = ''
+
         pending = 'Pending'
         sql = f"""
             SELECT fs.SubmissionID, fs.FormID, f.FormName, 
                 fs.SubmissionDate, fs.SubmissionStatus, fs.UserID, sf.FieldValue
-            FROM Form_Submissions fs
-            LEFT JOIN Submission_Fields sf on fs.SubmissionID
-            LEFT JOIN Forms f on f.FormID = fs.FormID
+            FROM Form_Submissions{table_choice} fs
+            LEFT JOIN Submission_Fields{table_choice} sf on fs.SubmissionID
+            LEFT JOIN Forms{table_choice} f on f.FormID = fs.FormID
                 WHERE fs.SubmissionID = sf.SubmissionID
                 AND fs.SubmissionStatus = '{pending}'
         """
@@ -192,7 +207,7 @@ class Data_Review_Model():
         
         submissions = []
         for a in df.itertuples():
-            submission = Submission()
+            submission = Submission(mode=self.mode)
             submission.retrieve_Form(form_name=a.FormName, form_id=a.FormID)
             submission.submission_date = a.SubmissionDate
             submission.submission_status = a.SubmissionStatus
@@ -211,7 +226,7 @@ class Data_Review_Model():
                 return
     
     def create_Approval(self, user_id, field_values_dict):
-        new_approval = Approval()
+        new_approval = Approval(mode=self.mode)
         new_approval.set_Approval_Attributes(submission_id=self.submission_review.submission_id, \
                                             user_id=user_id)
         record = new_approval.publish_Approval(field_values_dict)
@@ -219,7 +234,7 @@ class Data_Review_Model():
 
 class Resubmission_Model():
     
-    def __init__(self):
+    def __init__(self, mode):
         self.db_config =  {
             'host': f"{os.environ.get('host')}",
             'port': f"{os.environ.get('portnum')}",
@@ -230,15 +245,22 @@ class Resubmission_Model():
         self.rot_model = RoT_Model()
         self.me_model = Manual_Entry_Model()
         self.rejected_submissions = []
+        self.mode = mode
 
     def get_Rejected_Submissions(self, user_id):
+
+        if self.mode == 'dev':
+            table_choice = '_dev'
+        else:
+            table_choice = ''
+    
         rejected = 'Rejected'
         sql = f"""
             SELECT fs.SubmissionID, fs.FormID, f.FormName, 
                 fs.SubmissionDate, fs.SubmissionStatus, fs.UserID, sf.FieldValue
-                FROM Form_Submissions fs
-            LEFT JOIN Submission_Fields sf on fs.SubmissionID
-            LEFT JOIN Forms f on f.FormID = fs.FormID
+                FROM Form_Submissions{table_choice} fs
+            LEFT JOIN Submission_Fields{table_choice} sf on fs.SubmissionID
+            LEFT JOIN Forms{table_choice} f on f.FormID = fs.FormID
                 WHERE fs.SubmissionID = sf.SubmissionID
                 AND fs.SubmissionStatus = '{rejected}'
                 AND fs.UserID = '{user_id}'
@@ -249,7 +271,7 @@ class Resubmission_Model():
         
         submissions = []
         for a in df.itertuples():
-            submission = Submission()
+            submission = Submission(mode=self.mode)
             submission.retrieve_Form(form_name=a.FormName, form_id=a.FormID)
             submission.submission_date = a.SubmissionDate
             submission.submission_status = a.SubmissionStatus
@@ -268,7 +290,7 @@ class Resubmission_Model():
                 return
 
 class Submission():
-    def __init__(self):
+    def __init__(self, mode):
         self.field_values_dict = None
         self.field_values_db = None
         self.form = None
@@ -283,6 +305,7 @@ class Submission():
             'passwd':f"{os.environ.get('passwd')}",
             'db':f"{os.environ.get('db')}"
         }
+        self.mode = mode
 
     def set_Submission_Attributes(self, user_id, field_values_dict):
 
@@ -294,7 +317,13 @@ class Submission():
         self.submission_date = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
     
     def set_Submission_ID(self):
-        table_name = 'Form_Submissions'
+
+        if self.mode == 'dev':
+            table_choice = '_dev'
+        else:
+            table_choice = ''
+    
+        table_name = 'Form_Submissions' + table_choice
         column_name = 'SubmissionID'
         sql = f"""
             SELECT 
@@ -319,11 +348,18 @@ class Submission():
         self.form = self.form.set_Fields()
     
     def publish_Submission(self):
+        
+        if self.mode == 'dev':
+            table_choice = '_dev'
+        else:
+            table_choice = ''
+        
         output_record = ''
+
         # send to database, insert into Form_Submissions
         with Database(self.db_config) as db_conn:
             mycursor = db_conn.db_cursor
-            table = 'Form_Submissions'
+            table = 'Form_Submissions' + table_choice
             sql = f"INSERT INTO {table} (SubmissionID, UserID, SubmissionDate, SubmissionStatus, FormID) VALUES (%s, %s, %s, %s, %s)"
             val = (str(self.submission_id), str(self.user_id), str(self.submission_date), str(self.submission_status), str(self.form.form_id))
             mycursor.execute(sql, val)
@@ -333,7 +369,7 @@ class Submission():
         # send to database, insert into Submission_Fields 
         with Database(self.db_config) as db_conn:
             mycursor = db_conn.db_cursor
-            table = 'Submission_Fields'
+            table = 'Submission_Fields' + table_choice
             sql = f"INSERT INTO {table} (SubmissionID, FieldValue) VALUES (%s, %s)"
             val = (str(self.submission_id), str(self.field_values_db))
             mycursor.execute(sql, val)
@@ -347,6 +383,11 @@ class Submission():
         self.field_values_dict = field_values_dict
         self.create_FieldValues_db()
     
+        if self.mode == 'dev':
+            table_choice = '_dev'
+        else:
+            table_choice = ''
+        
         output_record = ''
 
         # send to Approvals table AND reset_Submission_Status(self):
@@ -355,7 +396,7 @@ class Submission():
         # first, reset submission status to approved in Form_Submissions
         with Database(self.db_config) as db_conn:
             mycursor = db_conn.db_cursor
-            table = 'Form_Submissions'
+            table = 'Form_Submissions' + table_choice
             submission_status = 'SubmissionStatus'
             submission_id = 'SubmissionID'
             sql = f"UPDATE {table} SET {submission_status} = '{self.submission_status}' WHERE {submission_id} = '{self.submission_id}'"
@@ -367,7 +408,7 @@ class Submission():
         # send to database, insert into Submission_Fields 
         with Database(self.db_config) as db_conn:
             mycursor = db_conn.db_cursor
-            table = 'Submission_Fields'
+            table = 'Submission_Fields' + table_choice
             field_value = 'FieldValue'
             submission_id = 'SubmissionID'
             sql = f"UPDATE {table} SET {field_value} = '{self.field_values_db}' WHERE {submission_id} = '{self.submission_id}'"
@@ -388,14 +429,20 @@ class Submission():
         self.form = self.form.get_Form_Attributes(form_id=form_id)
 
     def retrieve_Submission_Attributes(self, id):
+
+        if self.mode == 'dev':
+            table_choice = '_dev'
+        else:
+            table_choice = ''
+    
         # get all attributes from database. calls retrieve_Form, and parse_FieldValues_db().
         self.submission_id = id
         sql = f"""
             SELECT fs.SubmissionID, fs.FormID, f.FormName, 
             fs.SubmissionDate, fs.SubmissionStatus, fs.UserID, sf.FieldValue
-            FROM Form_Submissions fs
-            LEFT JOIN Submission_Fields sf on fs.SubmissionID
-            LEFT JOIN Forms f on f.FormID = fs.FormID
+            FROM Form_Submissions{table_choice} fs
+            LEFT JOIN Submission_Fields{table_choice} sf on fs.SubmissionID
+            LEFT JOIN Forms{table_choice} f on f.FormID = fs.FormID
             WHERE fs.SubmissionID = sf.SubmissionID
             AND fs.SubmissionID = '{self.submission_id}'
         """
@@ -436,7 +483,7 @@ class Submission():
         self.field_values_db = fv_db
 
 class Approval(Submission):
-    def __init__(self):
+    def __init__(self, mode):
         self.db_config =  {
             'host': f"{os.environ.get('host')}",
             'port': f"{os.environ.get('portnum')}",
@@ -448,6 +495,7 @@ class Approval(Submission):
         self.approval_id = None
         self.approver_id = None
         self.submission_id = None
+        self.mode = mode
         
     def set_Approval_Attributes(self, submission_id, user_id):
         # set Approval info given submission_id and user_id (approver/admin)
@@ -457,7 +505,13 @@ class Approval(Submission):
         self.retrieve_Submission_Attributes(submission_id)
 
     def set_Approval_ID(self):
-        table_name = 'Approvals'
+
+        if self.mode == 'dev':
+            table_choice = '_dev'
+        else:
+            table_choice = ''
+
+        table_name = 'Approvals' + table_choice
         column_name = 'ApprovalID'
         sql = f"""
             SELECT 
@@ -477,6 +531,12 @@ class Approval(Submission):
         self.approval_id = id
 
     def publish_Approval(self, field_values_dict):
+
+        if self.mode == 'dev':
+            table_choice = '_dev'
+        else:
+            table_choice = ''
+    
         output_record = ''
         # update Submission tables with status as 'Approved'
         update_record = self.update_Submission(status='Approved', field_values_dict=field_values_dict)
@@ -485,7 +545,7 @@ class Approval(Submission):
         # next, insert new approval record into Approvals 
         with Database(self.db_config) as db_conn:
             mycursor = db_conn.db_cursor
-            table = 'Approvals'
+            table = 'Approvals' + table_choice
             sql = f"INSERT INTO {table} (ApprovalID, ApproverID, ApprovalDate, SubmissionID) VALUES (%s, %s, %s, %s)"
             val = (str(self.approval_id), str(self.approver_id), str(self.approval_date), str(self.submission_id))
             mycursor.execute(sql, val)

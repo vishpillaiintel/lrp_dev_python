@@ -11,7 +11,7 @@ rot_config = {
     'Skew_Name': {
         'Field_ID': 9048937,
         'Field_Type': str,
-        'Field_Question': 'Need to specify Skew? (Check if Yes)',
+        'Field_Question': 'Need to specify Skew?',
         'Field_Required': 1
     },
     'Package_Type': {
@@ -157,7 +157,7 @@ manual_entry_config = {
     'Skew_Name': {
         'Field_ID': 5765678,
         'Field_Type': str,
-        'Field_Question': 'Need to specify Skew? (Check if Yes)',
+        'Field_Question': 'Need to specify Skew?',
         'Field_Required': 1
     },
     'Package_Type': {
