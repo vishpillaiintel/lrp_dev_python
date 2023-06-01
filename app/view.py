@@ -351,6 +351,75 @@ class Data_Review_View():
                                 f'User ID: {pending_submission.user_id}, ' +  f'Submission Date: {pending_submission.submission_date}'] = pending_submission.submission_id
         return self.pending_options
 
+    def breakout_tables(self):
+
+        if 'RoT' in self.dr_model.submission_review.form.form_name:
+            product_keys = ['Product_Name', 'Skew_Name', 'Package_Type', 'Package_Type_Estimation']
+            general_keys = ['Number_of_Main_Die', 'Exist_EMIB', 'Exist_POINT']
+            wla_keys = ['WLA_Architecture', 'Number_of_Chiplet_Base_Die', 'DoW_Architecture', \
+                        'ODI_Chiplet_Size', 'HBI_Architecture', 'Signal_Area']
+            other_keys = ['Die_Architecture_Summary', 'Number_of_Satellite_Die', 'Exist_HBM', \
+                          'Lifetime_Volume', 'Architecture_Maturity']
+            product_series = pd.Series(data=[self.dr_model.submission_review.field_values_dict[key] for key in product_keys], \
+                                       index=product_keys, name='Value')
+            general_series =  pd.Series(data=[self.dr_model.submission_review.field_values_dict[key] for key in general_keys], \
+                                        index=general_keys, name='Value')
+            wla_series =  pd.Series(data=[self.dr_model.submission_review.field_values_dict[key] for key in wla_keys], \
+                                        index=wla_keys, name='Value')
+            other_series = pd.Series(data=[self.dr_model.submission_review.field_values_dict[key] for key in other_keys], \
+                                        index=other_keys, name='Value')
+            if self.dr_model.submission_review.field_values_dict['WLA_Architecture'] == 'No WLA':
+                is_wla = 0
+            else:
+                is_wla = 1
+            output = {'Product Information': product_series, 'General Information': general_series, 'Other Information': other_series, \
+                    'WLA Information': wla_series}
+        else:
+            product_keys = ['Product_Name', 'Skew_Name', 'Package_Type']
+            other_keys = ['Die_Architecture', 'WLA_Architecture_Maturity', 'Pkg_Assembly_Architecture_Maturity']
+            product_series = pd.Series(data=[self.dr_model.submission_review.field_values_dict[key] for key in product_keys], \
+                                       index=product_keys, name='Value')
+            other_series = pd.Series(data=[self.dr_model.submission_review.field_values_dict[key] for key in other_keys], \
+                                        index=other_keys, name='Value')
+            if (self.dr_model.submission_review.field_values_dict['Die_Architecture'] == 'EMIB') or \
+                (self.dr_model.submission_review.field_values_dict['Die_Architecture'] == 'Legacy Client'):
+                is_wla = 0
+            else:
+                is_wla = 1
+            output = {'Product Information': product_series, 'Other Information': other_series}
+ 
+        if is_wla:
+            prq_columns = ['PO/ES0', 'ES1', 'ES2', 'QS', 'PRQ', 'PRQ+1Q']
+            prq_index = ["WLA RtD", "WLA Test PIYL", "WLA Inventory Yield", "Pkg Assemb RtD", "Pkg Assemb Test PIYL", "Pkg Assemb Finish", "Pkg Assemb Inventory Yield"]
+            prq_table = pd.DataFrame(columns = prq_columns, index = prq_index)
+            
+            prq_columns = ['PO/ES0', 'ES1', 'ES2', 'QS', 'PRQ', 'PRQ+1Q']
+            prq_index = ["WLA RtD", "WLA Test PIYL", "WLA Inventory Yield", "Pkg Assemb RtD", "Pkg Assemb Test PIYL", "Pkg Assemb Finish", "Pkg Assemb Inventory Yield"]
+            prq_table = pd.DataFrame(columns = prq_columns, index = prq_index)
+            for prq_ind in prq_index:
+                row = []
+                for prq_col in prq_columns:
+                    str_key = prq_ind + ';' + prq_col
+                    row.append(self.dr_model.submission_review.field_values_dict[str_key])
+                prq_table.loc[prq_ind] = row
+        else:
+            prq_columns = ['PO/ES0', 'ES1', 'ES2', 'QS', 'PRQ', 'PRQ+1Q']
+            prq_index = ["Pkg Assemb RtD", "Pkg Assemb Test PIYL", "Pkg Assemb Finish", "Pkg Assemb Inventory Yield"]
+            prq_table = pd.DataFrame(columns = prq_columns, index = prq_index)
+            
+            prq_columns = ['PO/ES0', 'ES1', 'ES2', 'QS', 'PRQ', 'PRQ+1Q']
+            prq_index = ["Pkg Assemb RtD", "Pkg Assemb Test PIYL", "Pkg Assemb Finish", "Pkg Assemb Inventory Yield"]
+            prq_table = pd.DataFrame(columns = prq_columns, index = prq_index)
+            for prq_ind in prq_index:
+                row = []
+                for prq_col in prq_columns:
+                    str_key = prq_ind + ';' + prq_col
+                    row.append(self.dr_model.submission_review.field_values_dict[str_key])
+                prq_table.loc[prq_ind] = row
+        
+        output['PRQ Table'] = prq_table
+
+        return output
 
     def view(self):
 
@@ -405,8 +474,20 @@ class Data_Review_View():
         
         if options and st.session_state['get_sub_key']:
             self.dr_model.set_Submission_to_Review(self.pending_options[selected_pending_option])
-            table = pd.Series(self.dr_model.submission_review.field_values_dict)
-            st.table(table)
+            tables = self.breakout_tables()
+            table_i = 0
+            for key, value in tables.items():
+                key_title = '*_' + key + '_*'
+                if table_i % 2:
+                    with col2:
+                        st.write(key_title)
+                        st.dataframe(value)
+                else:
+                    with col1:
+                        st.write(key_title)
+                        st.dataframe(value)    
+                table_i+=1
+
             reviewed = st.selectbox(label='Change Status: ', options=['Leave as Pending', 'Approve', 'Reject'], index=0)
             if st.button(label='**Submit to Database**', key='Review_DB'):
                 if reviewed=='Approve':
