@@ -5,25 +5,25 @@ import numpy as np
 import model
 import view
 from dotenv import load_dotenv
+import streamlit as st
+import utils
 
 load_dotenv()
+
+utils.setup_page()
 
 # dev or prod choice with LRP_DB
 modes = {'d': 'dev', 'p': 'prod'}
 mode = modes['d']
-
-st.set_page_config(
-    page_title="ATTD LRP Portal",
-    page_icon="🧊",
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
 
 # Create a sidebar
 st.sidebar.image('theme/logo.png', use_column_width=True)
 
 new_title = '<p style="color:#333333; font-size: 28px; text-align:center;">ATTD LRP Portal</p>'
 st.sidebar.markdown(new_title, unsafe_allow_html=True)
+
+# Create Home page
+home_v = view.Home_View()
 
 # Create lrp view based on master table
 lrp_m = model.LRP_Model(mode)
@@ -42,7 +42,9 @@ rs_v = view.Resubmission_View(rs_model=rs_m)
 dr_m = model.Data_Review_Model(mode)
 dr_v = view.Data_Review_View(dr_model=dr_m)
 
+
 page_names_to_funcs = {
+    "Home": home_v.view,
     "LRP": lrp_v.view,
     "Data Entry": de_v.view,
     "Resubmission": rs_v.view,

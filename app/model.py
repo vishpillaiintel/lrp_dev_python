@@ -169,6 +169,7 @@ class Data_Entry_Model():
         self.submission = Submission(mode=mode)
         self.rot_model = RoT_Model()
         self.me_model = Manual_Entry_Model()
+        self.commit_model = Commit_Model()
         self.mode = mode
 
 class Data_Review_Model():
@@ -562,9 +563,12 @@ class Form():
         if 'RoT' in str(form_name):
             self.form_name = 'RoT - Q2 2023'
             self.form_id = 0
-        else:
+        elif 'Manual' in str(form_name):
             self.form_name = 'Manual Entry - Q2 2023'
             self.form_id = 1
+        elif 'Commit' in str(form_name):
+            self.form_name = 'Commit - Q1 2023'
+            self.form_id = 2
 
     def get_Form_Attributes(self, form_id):
 
@@ -575,12 +579,42 @@ class Form():
     def set_Fields(self):
         if 'RoT' in self.form_name:
             self.fields = config.rot_config
-        else:
+        elif 'Manual' in self.form_name:
             self.fields = config.manual_entry_config
+        elif 'Commit' in self.form_name:
+            self.fields = config.commit_config
         return self
     
     def get_Field_Attribute(self, field_name, field_attribute):
         return self.fields[f'{field_name}'][f'{field_attribute}']
+
+class Commit_Model:
+
+    def __init__(self):
+        self.lrp_output = {}
+
+    def create_LRP(self, product_name, skew_name, package_type, note, create_pqs, result, exist_wla):
+        self.lrp_output['Product_Name'] = product_name
+        self.lrp_output['Skew_Name'] = skew_name
+        self.lrp_output['Package_Type'] = package_type
+        self.lrp_output['Create_PQS'] = create_pqs
+        self.lrp_output['Note'] = note
+        self.lrp_output['Exist_WLA'] = exist_wla
+
+        self.lrp_output = self.format_result(result_pred = result)
+
+        return result, self.lrp_output
+
+    def format_result(self, result_pred):
+        for idx, row in result_pred.iterrows():
+            for i in range(len(result_pred.columns)):
+                milestone_idx = idx + ';' + row.index[i]
+                val = row.values[i]
+                if val is None:
+                    val = ''
+                self.lrp_output[milestone_idx] = "{:.2f}".format(round(val, 2))
+
+        return self.lrp_output
 
         
 
@@ -610,6 +644,7 @@ class RoT_Model:
         self.exist_emib_selection = ["Yes", "No"]
         self.exist_point_selection = ["Yes", "No"]
         self.exist_hbm_selection = ["Yes", "No"]
+        self.create_pqs_selection = ["Yes", "No"]
         self.lifetime_vol_selection = ['Typical client: about 500Mu', \
                    'Typical Server', \
                    'Low client < 50-100Mu (10-20% of typical client vol.)' \
@@ -850,27 +885,44 @@ class RoT_Model:
                 (100-self.pkgassy_test(main_num, die_architect_input_val, type_num_satellite_input_val))/100)*100
 
     def inventory_yield(self, Die_Architecture_Info_val, is_wla, val):
-        if Die_Architecture_Info_val == 6: # legacy client
-            output = [99.90, 99.95, 99.95, 99.95, 99.95, 99.95]
-        elif Die_Architecture_Info_val == 7: # foveros
-            if is_wla == 1:
-                output = [99.7, 99.8, 99.8, 99.8, 99.9, 99.9] 
-            else:
-                output = [99.90, 99.95,	99.95, 99.95, 99.95, 99.95]
-        
-        elif Die_Architecture_Info_val < 4: # emib
-            output = [99.7, 99.8, 99.8, 99.8, 99.9, 99.9]
-        else: # coemib
-            if is_wla == 1:
+        if self.create_pqs_input == 1:
+            if Die_Architecture_Info_val == 6: # legacy client
+                output = [99.90, 99.95, 99.95, 99.95, 99.95, 99.95, 99.95]
+            elif Die_Architecture_Info_val == 7: # foveros
+                if is_wla == 1:
+                    output = [99.7, 99.8, 99.8, 99.8, 99.8, 99.9, 99.9] 
+                else:
+                    output = [99.90, 99.95,	99.95, 99.95, 99.95, 99.95, 99.95]
+            
+            elif Die_Architecture_Info_val < 4: # emib
+                output = [99.7, 99.8, 99.8, 99.8, 99.8, 99.9, 99.9]
+            else: # coemib
+                if is_wla == 1:
+                    output = [99.7, 99.8, 99.8, 99.8, 99.8, 99.9, 99.9]
+                else:
+                    output = [99.7, 99.8, 99.8, 99.8, 99.8, 99.9, 99.9]       
+        else:
+            if Die_Architecture_Info_val == 6: # legacy client
+                output = [99.90, 99.95, 99.95, 99.95, 99.95, 99.95]
+            elif Die_Architecture_Info_val == 7: # foveros
+                if is_wla == 1:
+                    output = [99.7, 99.8, 99.8, 99.8, 99.9, 99.9] 
+                else:
+                    output = [99.90, 99.95,	99.95, 99.95, 99.95, 99.95]
+            
+            elif Die_Architecture_Info_val < 4: # emib
                 output = [99.7, 99.8, 99.8, 99.8, 99.9, 99.9]
-            else:
-                output = [99.7, 99.8, 99.8, 99.8, 99.9, 99.9]
+            else: # coemib
+                if is_wla == 1:
+                    output = [99.7, 99.8, 99.8, 99.8, 99.9, 99.9]
+                else:
+                    output = [99.7, 99.8, 99.8, 99.8, 99.9, 99.9]
 
         return output[val-1]
     
     def get_index(self, pkg_type, exist_emib, point_pkg, lifetime_vol_input_val, \
            wla_architect, dow_architect_input_val, odi_chiplet_size, hbi_architect, \
-           exist_hbm_input_val, die_architect_input_val, architecture_maturity_val):
+           exist_hbm_input_val, die_architect_input_val, architecture_maturity_val, create_pqs_input):
         
         self.pkg_type_input = self.package_type_selection.index(pkg_type) + 1
         self.exist_emib_input = self.exist_emib_selection.index(exist_emib) + 1
@@ -882,17 +934,18 @@ class RoT_Model:
         self.hbi_architect_input = self.hbi_architect_selection.index(hbi_architect) + 1
         self.exist_hbm_input = self.exist_hbm_selection.index(exist_hbm_input_val) + 1
         self.die_architect_input = self.die_architect_selection.index(die_architect_input_val) + 1
-        self.architecture_maturity_input = self.architecture_maturity_selection.index(architecture_maturity_val) + 1        
+        self.architecture_maturity_input = self.architecture_maturity_selection.index(architecture_maturity_val) + 1
+        self.create_pqs_input = self.create_pqs_selection.index(create_pqs_input) + 1 
 
 
     def lrp_prediction(self, product_name, skew_name, chiplet_num, pkg_class, pkg_type, main_num, exist_emib, point_pkg, lifetime_vol_input_val, \
            wla_architect, dow_architect_input_val, odi_chiplet_size, hbi_architect, signal_area_hbi, \
            exist_hbm_input_val, die_architect_input_val, type_num_satellite_input_val, \
-           architecture_maturity_val):
+           architecture_maturity_val, create_pqs_input):
         
         self.get_index(pkg_type, exist_emib, point_pkg, lifetime_vol_input_val, 
            wla_architect, dow_architect_input_val, odi_chiplet_size, hbi_architect, \
-           exist_hbm_input_val, die_architect_input_val, architecture_maturity_val)
+           exist_hbm_input_val, die_architect_input_val, architecture_maturity_val, create_pqs_input)
         
         wla_ssdt = self.wla_ssdt(self.wla_architect_input, float(chiplet_num), self.dow_architect_input, \
         self.odi_chiplet_size_input, self.hbi_architect_input, float(signal_area_hbi))
@@ -902,33 +955,61 @@ class RoT_Model:
         pkgassy_finish_rtd = self.pkgassy_finish(self.pkg_type_input)
         pkgassy_test = self.pkgassy_test(float(main_num), self.die_architect_input, float(type_num_satellite_input_val))
 
-        if self.architecture_maturity_input == 2 or self.architecture_maturity_input == 1:
-            multiplier = np.array([4, 2.5, 2, 1.5, 1, 1])
-        elif self.architecture_maturity_input == 4 or self.architecture_maturity_input == 3:
-            multiplier = np.array([6, 3.5, 2.5, 1.5, 1.25, 1])
+        if self.create_pqs_input == 1:
+            if self.architecture_maturity_input == 2 or self.architecture_maturity_input == 1:
+                multiplier = np.array([4, 2.5, 2, 1.5, 1.5, 1, 1])
+            elif self.architecture_maturity_input == 4 or self.architecture_maturity_input == 3:
+                multiplier = np.array([6, 3.5, 2.5, 1.5, 1.5, 1.25, 1])
 
-        loss = pd.DataFrame(columns = ['PO/ES0', 'ES1', 'ES2', 'QS', 'PRQ', 'PRQ+1Q'])
-        if self.wla_architect_input == 1:
-            loss.loc[len(loss.index)] = multiplier*pkgassy_rtd
-            loss.loc[len(loss.index)] = multiplier*pkgassy_test
-            loss.loc[len(loss.index)] = multiplier*pkgassy_finish_rtd
-            result = loss.apply(lambda x: 100 - x)
-            result.loc[len(result.index)] = [self.inventory_yield(Die_Architecture_Info_val=self.die_architect_input, is_wla=0, val=i) for i in range(1,7)]
-            result.index = ["Pkg Assemb RtD", "Pkg Assemb Test PIYL", "Pkg Assemb Finish", "Pkg Assemb Inventory Yield"]
+            loss = pd.DataFrame(columns = ['PO/ES0', 'ES1', 'ES2', 'PQS', 'QS', 'PRQ', 'PRQ+1Q'])
+            if self.wla_architect_input == 1:
+                loss.loc[len(loss.index)] = multiplier*pkgassy_rtd
+                loss.loc[len(loss.index)] = multiplier*pkgassy_test
+                loss.loc[len(loss.index)] = multiplier*pkgassy_finish_rtd
+                result = loss.apply(lambda x: 100 - x)
+                result.loc[len(result.index)] = [self.inventory_yield(Die_Architecture_Info_val=self.die_architect_input, is_wla=0, val=i) for i in range(1,8)]
+                result.index = ["Pkg Assemb RtD", "Pkg Assemb Test PIYL", "Pkg Assemb Finish", "Pkg Assemb Inventory Yield"]
 
+            else:
+                loss.loc[len(loss.index)] = multiplier*wla_rtd
+                loss.loc[len(loss.index)] = multiplier*wla_ssdt
+                loss.loc[len(loss.index)] = multiplier*pkgassy_rtd
+                loss.loc[len(loss.index)] = multiplier*pkgassy_test
+                loss.loc[len(loss.index)] = multiplier*pkgassy_finish_rtd
+                result = loss.apply(lambda x: 100 - x)
+                result.loc[1.5] = [self.inventory_yield(Die_Architecture_Info_val=self.die_architect_input, is_wla=1, val=i) for i in range(1,8)]
+                result.loc[len(result.index)] = [self.inventory_yield(Die_Architecture_Info_val=self.die_architect_input, is_wla=0, val=i) for i in range(1,8)]
+                result = result.sort_index()
+                result.columns = ['PO/ES0', 'ES1', 'ES2', 'PQS','QS', 'PRQ', 'PRQ+1Q']
+                result.index = ["WLA RtD", "WLA Test PIYL", "WLA Inventory Yield", "Pkg Assemb RtD", "Pkg Assemb Test PIYL", "Pkg Assemb Finish", "Pkg Assemb Inventory Yield"]
         else:
-            loss.loc[len(loss.index)] = multiplier*wla_rtd
-            loss.loc[len(loss.index)] = multiplier*wla_ssdt
-            loss.loc[len(loss.index)] = multiplier*pkgassy_rtd
-            loss.loc[len(loss.index)] = multiplier*pkgassy_test
-            loss.loc[len(loss.index)] = multiplier*pkgassy_finish_rtd
-            result = loss.apply(lambda x: 100 - x)
-            result.loc[1.5] = [self.inventory_yield(Die_Architecture_Info_val=self.die_architect_input, is_wla=1, val=i) for i in range(1,7)]
-            result.loc[len(result.index)] = [self.inventory_yield(Die_Architecture_Info_val=self.die_architect_input, is_wla=0, val=i) for i in range(1,7)]
-            result = result.sort_index()
-            result.columns = ['PO/ES0', 'ES1', 'ES2', 'QS', 'PRQ', 'PRQ+1Q']
-            result.index = ["WLA RtD", "WLA Test PIYL", "WLA Inventory Yield", "Pkg Assemb RtD", "Pkg Assemb Test PIYL", "Pkg Assemb Finish", "Pkg Assemb Inventory Yield"]
-        
+            if self.architecture_maturity_input == 2 or self.architecture_maturity_input == 1:
+                multiplier = np.array([4, 2.5, 2, 1.5, 1, 1])
+            elif self.architecture_maturity_input == 4 or self.architecture_maturity_input == 3:
+                multiplier = np.array([6, 3.5, 2.5, 1.5, 1.25, 1])
+
+            loss = pd.DataFrame(columns = ['PO/ES0', 'ES1', 'ES2', 'QS', 'PRQ', 'PRQ+1Q'])
+            if self.wla_architect_input == 1:
+                loss.loc[len(loss.index)] = multiplier*pkgassy_rtd
+                loss.loc[len(loss.index)] = multiplier*pkgassy_test
+                loss.loc[len(loss.index)] = multiplier*pkgassy_finish_rtd
+                result = loss.apply(lambda x: 100 - x)
+                result.loc[len(result.index)] = [self.inventory_yield(Die_Architecture_Info_val=self.die_architect_input, is_wla=0, val=i) for i in range(1,7)]
+                result.index = ["Pkg Assemb RtD", "Pkg Assemb Test PIYL", "Pkg Assemb Finish", "Pkg Assemb Inventory Yield"]
+
+            else:
+                loss.loc[len(loss.index)] = multiplier*wla_rtd
+                loss.loc[len(loss.index)] = multiplier*wla_ssdt
+                loss.loc[len(loss.index)] = multiplier*pkgassy_rtd
+                loss.loc[len(loss.index)] = multiplier*pkgassy_test
+                loss.loc[len(loss.index)] = multiplier*pkgassy_finish_rtd
+                result = loss.apply(lambda x: 100 - x)
+                result.loc[1.5] = [self.inventory_yield(Die_Architecture_Info_val=self.die_architect_input, is_wla=1, val=i) for i in range(1,7)]
+                result.loc[len(result.index)] = [self.inventory_yield(Die_Architecture_Info_val=self.die_architect_input, is_wla=0, val=i) for i in range(1,7)]
+                result = result.sort_index()
+                result.columns = ['PO/ES0', 'ES1', 'ES2', 'QS', 'PRQ', 'PRQ+1Q']
+                result.index = ["WLA RtD", "WLA Test PIYL", "WLA Inventory Yield", "Pkg Assemb RtD", "Pkg Assemb Test PIYL", "Pkg Assemb Finish", "Pkg Assemb Inventory Yield"]
+            
         self.lrp_output['Product_Name'] = product_name
         self.lrp_output['Skew_Name'] = skew_name
         self.lrp_output['Package_Type'] = pkg_class
@@ -936,6 +1017,7 @@ class RoT_Model:
         self.lrp_output['Number_of_Main_Die'] = main_num
         self.lrp_output['Exist_EMIB'] = exist_emib
         self.lrp_output['Exist_POINT'] = point_pkg
+        self.lrp_output['Create_PQS'] = create_pqs_input
         self.lrp_output['WLA_Architecture'] = wla_architect
         self.lrp_output['Number_of_Chiplet_Base_Die'] = chiplet_num
         self.lrp_output['DoW_Architecture'] = dow_architect_input_val
@@ -968,6 +1050,7 @@ class Manual_Entry_Model:
         self.Die_Architecture_Info_selection = ['Legacy Client','Foveros Client', 'EMIB', 'Co-EMIB']
         self.WLA_Maturity_selection = ['Evolutionary','Revolutionary']
         self.Pkg_Assemb_Maturity_selection = ['Evolutionary','Revolutionary']
+        self.create_pqs_selection = ['Yes', 'No']
         
         self.lrp_output = {}
 
@@ -982,62 +1065,105 @@ class Manual_Entry_Model:
         return output
 
     def inventory_yield(self, Die_Architecture_Info_val, is_WLA, val):
-        if Die_Architecture_Info_val == 1:
-            output = [99.90, 99.95, 99.95, 99.95, 99.95, 99.95]
-        elif Die_Architecture_Info_val == 2:
-            if is_WLA == 0:
-                output = [99.7, 99.8, 99.8, 99.8, 99.9, 99.9]
+        if self.create_pqs_input == 1:
+            if Die_Architecture_Info_val == 1:
+                output = [99.90, 99.95, 99.95, 99.95, 99.95, 99.95, 99.95]
+            elif Die_Architecture_Info_val == 2:
+                if is_WLA == 0:
+                    output = [99.7, 99.8, 99.8, 99.8, 99.8, 99.9, 99.9]
+                else:
+                    output = [99.90, 99.95,	99.95, 99.95, 99.95, 99.95, 99.95]
+            
+            elif Die_Architecture_Info_val == 3:
+                output = [99.7, 99.8, 99.8, 99.8, 99.8, 99.9, 99.9]
             else:
-                output = [99.90, 99.95,	99.95, 99.95, 99.95, 99.95]
-        
-        elif Die_Architecture_Info_val == 3:
-            output = [99.7, 99.8, 99.8, 99.8, 99.9, 99.9]
+                if is_WLA == 0:
+                    output = [99.7, 99.8, 99.8, 99.8, 99.8, 99.9, 99.9]
+                else:
+                    output = [99.7, 99.8, 99.8, 99.8, 99.8, 99.9, 99.9]
         else:
-            if is_WLA == 0:
+            if Die_Architecture_Info_val == 1:
+                output = [99.90, 99.95, 99.95, 99.95, 99.95, 99.95]
+            elif Die_Architecture_Info_val == 2:
+                if is_WLA == 0:
+                    output = [99.7, 99.8, 99.8, 99.8, 99.9, 99.9]
+                else:
+                    output = [99.90, 99.95,	99.95, 99.95, 99.95, 99.95]
+            
+            elif Die_Architecture_Info_val == 3:
                 output = [99.7, 99.8, 99.8, 99.8, 99.9, 99.9]
             else:
-                output = [99.7, 99.8, 99.8, 99.8, 99.9, 99.9]
+                if is_WLA == 0:
+                    output = [99.7, 99.8, 99.8, 99.8, 99.9, 99.9]
+                else:
+                    output = [99.7, 99.8, 99.8, 99.8, 99.9, 99.9]
 
         return output[val-1]
 
-    def get_index(self,  Die_Architecture_Info_val, WLA_Maturity, Pkg_Assemb_Maturity):
+    def get_index(self,  Die_Architecture_Info_val, WLA_Maturity, Pkg_Assemb_Maturity, create_pqs_input):
         
         self.Die_Architecture_Info_val = self.Die_Architecture_Info_selection.index(Die_Architecture_Info_val) + 1
         if WLA_Maturity != None:
             self.WLA_Maturity = self.WLA_Maturity_selection.index(WLA_Maturity) + 1
         self.Pkg_Assemb_Maturity = self.Pkg_Assemb_Maturity_selection.index(Pkg_Assemb_Maturity) + 1
+        self.create_pqs_input = self.create_pqs_selection.index(create_pqs_input) + 1
 
 
     def lrp_prediction(self, product_name, skew_name, pkg_class, Die_Architecture_Info_val, WLA_Maturity, Pkg_Assemb_Maturity,
                                      PRQ_WLA_RtD, PRQ_WLA_Test_PIYL, PRQ_Pkg_Assemb_RtD,
-                                     PRQ_Pkg_Test_PIYL, PRQ_Pkg_Assemb_Finish):
+                                     PRQ_Pkg_Test_PIYL, PRQ_Pkg_Assemb_Finish, create_pqs_input):
         
-        self.get_index(Die_Architecture_Info_val, WLA_Maturity, Pkg_Assemb_Maturity)
+        self.get_index(Die_Architecture_Info_val, WLA_Maturity, Pkg_Assemb_Maturity, create_pqs_input)
         
-        if (self.Die_Architecture_Info_val==2) or (self.Die_Architecture_Info_val == 4):
-            Milestone = ["WLA RtD", "WLA Test PIYL", "WLA Inventory Yield", "Pkg Assemb RtD", "Pkg Assemb Test PIYL", "Pkg Assemb Finish", "Pkg Assemb Inventory Yield"]
-            PO = [self.multiplier(PRQ_WLA_RtD, self.WLA_Maturity, 1), self.multiplier(PRQ_WLA_Test_PIYL, self.WLA_Maturity, 1), self.inventory_yield(self.Die_Architecture_Info_val, 1, 1), self.multiplier(PRQ_Pkg_Assemb_RtD, self.Pkg_Assemb_Maturity, 1), self.multiplier(PRQ_Pkg_Test_PIYL, self.Pkg_Assemb_Maturity, 1), self.multiplier(PRQ_Pkg_Assemb_Finish, self.Pkg_Assemb_Maturity, 1), self.inventory_yield(self.Die_Architecture_Info_val, 0, 1)]
-            ES1 = [self.multiplier(PRQ_WLA_RtD, self.WLA_Maturity, 2), self.multiplier(PRQ_WLA_Test_PIYL, self.WLA_Maturity, 2), self.inventory_yield(self.Die_Architecture_Info_val, 1, 2), self.multiplier(PRQ_Pkg_Assemb_RtD, self.Pkg_Assemb_Maturity, 2), self.multiplier(PRQ_Pkg_Test_PIYL, self.Pkg_Assemb_Maturity, 2), self.multiplier(PRQ_Pkg_Assemb_Finish, self.Pkg_Assemb_Maturity, 2), self.inventory_yield(self.Die_Architecture_Info_val, 0, 2)]
-            ES2 = [self.multiplier(PRQ_WLA_RtD, self.WLA_Maturity, 3), self.multiplier(PRQ_WLA_Test_PIYL, self.WLA_Maturity, 3), self.inventory_yield(self.Die_Architecture_Info_val, 1, 3), self.multiplier(PRQ_Pkg_Assemb_RtD, self.Pkg_Assemb_Maturity, 3), self.multiplier(PRQ_Pkg_Test_PIYL, self.Pkg_Assemb_Maturity, 3), self.multiplier(PRQ_Pkg_Assemb_Finish, self.Pkg_Assemb_Maturity, 3), self.inventory_yield(self.Die_Architecture_Info_val, 0, 3)]
-            QS = [self.multiplier(PRQ_WLA_RtD, self.WLA_Maturity, 4), self.multiplier(PRQ_WLA_Test_PIYL, self.WLA_Maturity, 4), self.inventory_yield(self.Die_Architecture_Info_val, 1, 4), self.multiplier(PRQ_Pkg_Assemb_RtD, self.Pkg_Assemb_Maturity, 4), self.multiplier(PRQ_Pkg_Test_PIYL, self.Pkg_Assemb_Maturity, 4), self.multiplier(PRQ_Pkg_Assemb_Finish, self.Pkg_Assemb_Maturity, 4), self.inventory_yield(self.Die_Architecture_Info_val, 0, 4)]
-            PRQ = [self.multiplier(PRQ_WLA_RtD, self.WLA_Maturity, 5), self.multiplier(PRQ_WLA_Test_PIYL, self.WLA_Maturity, 5), self.inventory_yield(self.Die_Architecture_Info_val, 1, 5), self.multiplier(PRQ_Pkg_Assemb_RtD, self.Pkg_Assemb_Maturity, 5), self.multiplier(PRQ_Pkg_Test_PIYL, self.Pkg_Assemb_Maturity, 5), self.multiplier(PRQ_Pkg_Assemb_Finish, self.Pkg_Assemb_Maturity, 5), self.inventory_yield(self.Die_Architecture_Info_val, 0, 5)]
-            PRQ_1Q = [self.multiplier(PRQ_WLA_RtD, self.WLA_Maturity, 6), self.multiplier(PRQ_WLA_Test_PIYL, self.WLA_Maturity, 6), self.inventory_yield(self.Die_Architecture_Info_val, 1, 6), self.multiplier(PRQ_Pkg_Assemb_RtD, self.Pkg_Assemb_Maturity, 6), self.multiplier(PRQ_Pkg_Test_PIYL, self.Pkg_Assemb_Maturity, 6), self.multiplier(PRQ_Pkg_Assemb_Finish, self.Pkg_Assemb_Maturity, 6), self.inventory_yield(self.Die_Architecture_Info_val, 0, 6)]
+        if self.create_pqs_input == 1:
+            if (self.Die_Architecture_Info_val==2) or (self.Die_Architecture_Info_val == 4):
+                Milestone = ["WLA RtD", "WLA Test PIYL", "WLA Inventory Yield", "Pkg Assemb RtD", "Pkg Assemb Test PIYL", "Pkg Assemb Finish", "Pkg Assemb Inventory Yield"]
+                PO = [self.multiplier(PRQ_WLA_RtD, self.WLA_Maturity, 1), self.multiplier(PRQ_WLA_Test_PIYL, self.WLA_Maturity, 1), self.inventory_yield(self.Die_Architecture_Info_val, 1, 1), self.multiplier(PRQ_Pkg_Assemb_RtD, self.Pkg_Assemb_Maturity, 1), self.multiplier(PRQ_Pkg_Test_PIYL, self.Pkg_Assemb_Maturity, 1), self.multiplier(PRQ_Pkg_Assemb_Finish, self.Pkg_Assemb_Maturity, 1), self.inventory_yield(self.Die_Architecture_Info_val, 0, 1)]
+                ES1 = [self.multiplier(PRQ_WLA_RtD, self.WLA_Maturity, 2), self.multiplier(PRQ_WLA_Test_PIYL, self.WLA_Maturity, 2), self.inventory_yield(self.Die_Architecture_Info_val, 1, 2), self.multiplier(PRQ_Pkg_Assemb_RtD, self.Pkg_Assemb_Maturity, 2), self.multiplier(PRQ_Pkg_Test_PIYL, self.Pkg_Assemb_Maturity, 2), self.multiplier(PRQ_Pkg_Assemb_Finish, self.Pkg_Assemb_Maturity, 2), self.inventory_yield(self.Die_Architecture_Info_val, 0, 2)]
+                ES2 = [self.multiplier(PRQ_WLA_RtD, self.WLA_Maturity, 3), self.multiplier(PRQ_WLA_Test_PIYL, self.WLA_Maturity, 3), self.inventory_yield(self.Die_Architecture_Info_val, 1, 3), self.multiplier(PRQ_Pkg_Assemb_RtD, self.Pkg_Assemb_Maturity, 3), self.multiplier(PRQ_Pkg_Test_PIYL, self.Pkg_Assemb_Maturity, 3), self.multiplier(PRQ_Pkg_Assemb_Finish, self.Pkg_Assemb_Maturity, 3), self.inventory_yield(self.Die_Architecture_Info_val, 0, 3)]
+                PQS = [self.multiplier(PRQ_WLA_RtD, self.WLA_Maturity, 4), self.multiplier(PRQ_WLA_Test_PIYL, self.WLA_Maturity, 4), self.inventory_yield(self.Die_Architecture_Info_val, 1, 4), self.multiplier(PRQ_Pkg_Assemb_RtD, self.Pkg_Assemb_Maturity, 4), self.multiplier(PRQ_Pkg_Test_PIYL, self.Pkg_Assemb_Maturity, 4), self.multiplier(PRQ_Pkg_Assemb_Finish, self.Pkg_Assemb_Maturity, 4), self.inventory_yield(self.Die_Architecture_Info_val, 0, 4)]
+                QS = [self.multiplier(PRQ_WLA_RtD, self.WLA_Maturity, 4), self.multiplier(PRQ_WLA_Test_PIYL, self.WLA_Maturity, 4), self.inventory_yield(self.Die_Architecture_Info_val, 1, 4), self.multiplier(PRQ_Pkg_Assemb_RtD, self.Pkg_Assemb_Maturity, 4), self.multiplier(PRQ_Pkg_Test_PIYL, self.Pkg_Assemb_Maturity, 4), self.multiplier(PRQ_Pkg_Assemb_Finish, self.Pkg_Assemb_Maturity, 4), self.inventory_yield(self.Die_Architecture_Info_val, 0, 4)]
+                PRQ = [self.multiplier(PRQ_WLA_RtD, self.WLA_Maturity, 5), self.multiplier(PRQ_WLA_Test_PIYL, self.WLA_Maturity, 5), self.inventory_yield(self.Die_Architecture_Info_val, 1, 5), self.multiplier(PRQ_Pkg_Assemb_RtD, self.Pkg_Assemb_Maturity, 5), self.multiplier(PRQ_Pkg_Test_PIYL, self.Pkg_Assemb_Maturity, 5), self.multiplier(PRQ_Pkg_Assemb_Finish, self.Pkg_Assemb_Maturity, 5), self.inventory_yield(self.Die_Architecture_Info_val, 0, 5)]
+                PRQ_1Q = [self.multiplier(PRQ_WLA_RtD, self.WLA_Maturity, 6), self.multiplier(PRQ_WLA_Test_PIYL, self.WLA_Maturity, 6), self.inventory_yield(self.Die_Architecture_Info_val, 1, 6), self.multiplier(PRQ_Pkg_Assemb_RtD, self.Pkg_Assemb_Maturity, 6), self.multiplier(PRQ_Pkg_Test_PIYL, self.Pkg_Assemb_Maturity, 6), self.multiplier(PRQ_Pkg_Assemb_Finish, self.Pkg_Assemb_Maturity, 6), self.inventory_yield(self.Die_Architecture_Info_val, 0, 6)]
+            else:
+                Milestone = ["Pkg Assemb RtD", "Pkg Assemb Test PIYL", "Pkg Assemb Finish", "Pkg Assemb Inventory Yield"]
+                PO = [self.multiplier(PRQ_Pkg_Assemb_RtD, self.Pkg_Assemb_Maturity, 1), self.multiplier(PRQ_Pkg_Test_PIYL, self.Pkg_Assemb_Maturity, 1), self.multiplier(PRQ_Pkg_Assemb_Finish, self.Pkg_Assemb_Maturity, 1), self.inventory_yield(self.Die_Architecture_Info_val, 0, 1)]
+                ES1 = [self.multiplier(PRQ_Pkg_Assemb_RtD, self.Pkg_Assemb_Maturity, 2), self.multiplier(PRQ_Pkg_Test_PIYL, self.Pkg_Assemb_Maturity, 2), self.multiplier(PRQ_Pkg_Assemb_Finish, self.Pkg_Assemb_Maturity, 2), self.inventory_yield(self.Die_Architecture_Info_val, 0, 2)]
+                ES2 = [self.multiplier(PRQ_Pkg_Assemb_RtD, self.Pkg_Assemb_Maturity, 3), self.multiplier(PRQ_Pkg_Test_PIYL, self.Pkg_Assemb_Maturity, 3), self.multiplier(PRQ_Pkg_Assemb_Finish, self.Pkg_Assemb_Maturity, 3), self.inventory_yield(self.Die_Architecture_Info_val, 0, 3)]
+                PQS = [self.multiplier(PRQ_Pkg_Assemb_RtD, self.Pkg_Assemb_Maturity, 4), self.multiplier(PRQ_Pkg_Test_PIYL, self.Pkg_Assemb_Maturity, 4), self.multiplier(PRQ_Pkg_Assemb_Finish, self.Pkg_Assemb_Maturity, 4), self.inventory_yield(self.Die_Architecture_Info_val, 0, 4)]
+                QS = [self.multiplier(PRQ_Pkg_Assemb_RtD, self.Pkg_Assemb_Maturity, 4), self.multiplier(PRQ_Pkg_Test_PIYL, self.Pkg_Assemb_Maturity, 4), self.multiplier(PRQ_Pkg_Assemb_Finish, self.Pkg_Assemb_Maturity, 4), self.inventory_yield(self.Die_Architecture_Info_val, 0, 4)]
+                PRQ = [self.multiplier(PRQ_Pkg_Assemb_RtD, self.Pkg_Assemb_Maturity, 5), self.multiplier(PRQ_Pkg_Test_PIYL, self.Pkg_Assemb_Maturity, 5), self.multiplier(PRQ_Pkg_Assemb_Finish, self.Pkg_Assemb_Maturity, 5), self.inventory_yield(self.Die_Architecture_Info_val, 0, 5)]
+                PRQ_1Q = [self.multiplier(PRQ_Pkg_Assemb_RtD, self.Pkg_Assemb_Maturity, 6), self.multiplier(PRQ_Pkg_Test_PIYL, self.Pkg_Assemb_Maturity, 6), self.multiplier(PRQ_Pkg_Assemb_Finish, self.Pkg_Assemb_Maturity, 6), self.inventory_yield(self.Die_Architecture_Info_val, 0, 6)]
+                
+            output_dict = {'Milestone': Milestone, 'PO/ES0': PO, 'ES1': ES1, 'ES2': ES2, 'PQS': PQS, 'QS': QS, 'PRQ': PRQ, 'PRQ+1Q': PRQ_1Q}
+            result = pd.DataFrame(output_dict, columns=['Milestone', 'PO/ES0', 'ES1', 'ES2', 'PQS', 'QS', 'PRQ', 'PRQ+1Q'])
+            result = result.set_index('Milestone')
         else:
-            Milestone = ["Pkg Assemb RtD", "Pkg Assemb Test PIYL", "Pkg Assemb Finish", "Pkg Assemb Inventory Yield"]
-            PO = [self.multiplier(PRQ_Pkg_Assemb_RtD, self.Pkg_Assemb_Maturity, 1), self.multiplier(PRQ_Pkg_Test_PIYL, self.Pkg_Assemb_Maturity, 1), self.multiplier(PRQ_Pkg_Assemb_Finish, self.Pkg_Assemb_Maturity, 1), self.inventory_yield(self.Die_Architecture_Info_val, 0, 1)]
-            ES1 = [self.multiplier(PRQ_Pkg_Assemb_RtD, self.Pkg_Assemb_Maturity, 2), self.multiplier(PRQ_Pkg_Test_PIYL, self.Pkg_Assemb_Maturity, 2), self.multiplier(PRQ_Pkg_Assemb_Finish, self.Pkg_Assemb_Maturity, 2), self.inventory_yield(self.Die_Architecture_Info_val, 0, 2)]
-            ES2 = [self.multiplier(PRQ_Pkg_Assemb_RtD, self.Pkg_Assemb_Maturity, 3), self.multiplier(PRQ_Pkg_Test_PIYL, self.Pkg_Assemb_Maturity, 3), self.multiplier(PRQ_Pkg_Assemb_Finish, self.Pkg_Assemb_Maturity, 3), self.inventory_yield(self.Die_Architecture_Info_val, 0, 3)]
-            QS = [self.multiplier(PRQ_Pkg_Assemb_RtD, self.Pkg_Assemb_Maturity, 4), self.multiplier(PRQ_Pkg_Test_PIYL, self.Pkg_Assemb_Maturity, 4), self.multiplier(PRQ_Pkg_Assemb_Finish, self.Pkg_Assemb_Maturity, 4), self.inventory_yield(self.Die_Architecture_Info_val, 0, 4)]
-            PRQ = [self.multiplier(PRQ_Pkg_Assemb_RtD, self.Pkg_Assemb_Maturity, 5), self.multiplier(PRQ_Pkg_Test_PIYL, self.Pkg_Assemb_Maturity, 5), self.multiplier(PRQ_Pkg_Assemb_Finish, self.Pkg_Assemb_Maturity, 5), self.inventory_yield(self.Die_Architecture_Info_val, 0, 5)]
-            PRQ_1Q = [self.multiplier(PRQ_Pkg_Assemb_RtD, self.Pkg_Assemb_Maturity, 6), self.multiplier(PRQ_Pkg_Test_PIYL, self.Pkg_Assemb_Maturity, 6), self.multiplier(PRQ_Pkg_Assemb_Finish, self.Pkg_Assemb_Maturity, 6), self.inventory_yield(self.Die_Architecture_Info_val, 0, 6)]
-        
-        output_dict = {'Milestone': Milestone, 'PO/ES0': PO, 'ES1': ES1, 'ES2': ES2, 'QS': QS, 'PRQ': PRQ, 'PRQ+1Q': PRQ_1Q}
-        result = pd.DataFrame(output_dict, columns=['Milestone', 'PO/ES0', 'ES1', 'ES2', 'QS', 'PRQ', 'PRQ+1Q'])
-        result = result.set_index('Milestone')
+            if (self.Die_Architecture_Info_val==2) or (self.Die_Architecture_Info_val == 4):
+                Milestone = ["WLA RtD", "WLA Test PIYL", "WLA Inventory Yield", "Pkg Assemb RtD", "Pkg Assemb Test PIYL", "Pkg Assemb Finish", "Pkg Assemb Inventory Yield"]
+                PO = [self.multiplier(PRQ_WLA_RtD, self.WLA_Maturity, 1), self.multiplier(PRQ_WLA_Test_PIYL, self.WLA_Maturity, 1), self.inventory_yield(self.Die_Architecture_Info_val, 1, 1), self.multiplier(PRQ_Pkg_Assemb_RtD, self.Pkg_Assemb_Maturity, 1), self.multiplier(PRQ_Pkg_Test_PIYL, self.Pkg_Assemb_Maturity, 1), self.multiplier(PRQ_Pkg_Assemb_Finish, self.Pkg_Assemb_Maturity, 1), self.inventory_yield(self.Die_Architecture_Info_val, 0, 1)]
+                ES1 = [self.multiplier(PRQ_WLA_RtD, self.WLA_Maturity, 2), self.multiplier(PRQ_WLA_Test_PIYL, self.WLA_Maturity, 2), self.inventory_yield(self.Die_Architecture_Info_val, 1, 2), self.multiplier(PRQ_Pkg_Assemb_RtD, self.Pkg_Assemb_Maturity, 2), self.multiplier(PRQ_Pkg_Test_PIYL, self.Pkg_Assemb_Maturity, 2), self.multiplier(PRQ_Pkg_Assemb_Finish, self.Pkg_Assemb_Maturity, 2), self.inventory_yield(self.Die_Architecture_Info_val, 0, 2)]
+                ES2 = [self.multiplier(PRQ_WLA_RtD, self.WLA_Maturity, 3), self.multiplier(PRQ_WLA_Test_PIYL, self.WLA_Maturity, 3), self.inventory_yield(self.Die_Architecture_Info_val, 1, 3), self.multiplier(PRQ_Pkg_Assemb_RtD, self.Pkg_Assemb_Maturity, 3), self.multiplier(PRQ_Pkg_Test_PIYL, self.Pkg_Assemb_Maturity, 3), self.multiplier(PRQ_Pkg_Assemb_Finish, self.Pkg_Assemb_Maturity, 3), self.inventory_yield(self.Die_Architecture_Info_val, 0, 3)]
+                QS = [self.multiplier(PRQ_WLA_RtD, self.WLA_Maturity, 4), self.multiplier(PRQ_WLA_Test_PIYL, self.WLA_Maturity, 4), self.inventory_yield(self.Die_Architecture_Info_val, 1, 4), self.multiplier(PRQ_Pkg_Assemb_RtD, self.Pkg_Assemb_Maturity, 4), self.multiplier(PRQ_Pkg_Test_PIYL, self.Pkg_Assemb_Maturity, 4), self.multiplier(PRQ_Pkg_Assemb_Finish, self.Pkg_Assemb_Maturity, 4), self.inventory_yield(self.Die_Architecture_Info_val, 0, 4)]
+                PRQ = [self.multiplier(PRQ_WLA_RtD, self.WLA_Maturity, 5), self.multiplier(PRQ_WLA_Test_PIYL, self.WLA_Maturity, 5), self.inventory_yield(self.Die_Architecture_Info_val, 1, 5), self.multiplier(PRQ_Pkg_Assemb_RtD, self.Pkg_Assemb_Maturity, 5), self.multiplier(PRQ_Pkg_Test_PIYL, self.Pkg_Assemb_Maturity, 5), self.multiplier(PRQ_Pkg_Assemb_Finish, self.Pkg_Assemb_Maturity, 5), self.inventory_yield(self.Die_Architecture_Info_val, 0, 5)]
+                PRQ_1Q = [self.multiplier(PRQ_WLA_RtD, self.WLA_Maturity, 6), self.multiplier(PRQ_WLA_Test_PIYL, self.WLA_Maturity, 6), self.inventory_yield(self.Die_Architecture_Info_val, 1, 6), self.multiplier(PRQ_Pkg_Assemb_RtD, self.Pkg_Assemb_Maturity, 6), self.multiplier(PRQ_Pkg_Test_PIYL, self.Pkg_Assemb_Maturity, 6), self.multiplier(PRQ_Pkg_Assemb_Finish, self.Pkg_Assemb_Maturity, 6), self.inventory_yield(self.Die_Architecture_Info_val, 0, 6)]
+            else:
+                Milestone = ["Pkg Assemb RtD", "Pkg Assemb Test PIYL", "Pkg Assemb Finish", "Pkg Assemb Inventory Yield"]
+                PO = [self.multiplier(PRQ_Pkg_Assemb_RtD, self.Pkg_Assemb_Maturity, 1), self.multiplier(PRQ_Pkg_Test_PIYL, self.Pkg_Assemb_Maturity, 1), self.multiplier(PRQ_Pkg_Assemb_Finish, self.Pkg_Assemb_Maturity, 1), self.inventory_yield(self.Die_Architecture_Info_val, 0, 1)]
+                ES1 = [self.multiplier(PRQ_Pkg_Assemb_RtD, self.Pkg_Assemb_Maturity, 2), self.multiplier(PRQ_Pkg_Test_PIYL, self.Pkg_Assemb_Maturity, 2), self.multiplier(PRQ_Pkg_Assemb_Finish, self.Pkg_Assemb_Maturity, 2), self.inventory_yield(self.Die_Architecture_Info_val, 0, 2)]
+                ES2 = [self.multiplier(PRQ_Pkg_Assemb_RtD, self.Pkg_Assemb_Maturity, 3), self.multiplier(PRQ_Pkg_Test_PIYL, self.Pkg_Assemb_Maturity, 3), self.multiplier(PRQ_Pkg_Assemb_Finish, self.Pkg_Assemb_Maturity, 3), self.inventory_yield(self.Die_Architecture_Info_val, 0, 3)]
+                QS = [self.multiplier(PRQ_Pkg_Assemb_RtD, self.Pkg_Assemb_Maturity, 4), self.multiplier(PRQ_Pkg_Test_PIYL, self.Pkg_Assemb_Maturity, 4), self.multiplier(PRQ_Pkg_Assemb_Finish, self.Pkg_Assemb_Maturity, 4), self.inventory_yield(self.Die_Architecture_Info_val, 0, 4)]
+                PRQ = [self.multiplier(PRQ_Pkg_Assemb_RtD, self.Pkg_Assemb_Maturity, 5), self.multiplier(PRQ_Pkg_Test_PIYL, self.Pkg_Assemb_Maturity, 5), self.multiplier(PRQ_Pkg_Assemb_Finish, self.Pkg_Assemb_Maturity, 5), self.inventory_yield(self.Die_Architecture_Info_val, 0, 5)]
+                PRQ_1Q = [self.multiplier(PRQ_Pkg_Assemb_RtD, self.Pkg_Assemb_Maturity, 6), self.multiplier(PRQ_Pkg_Test_PIYL, self.Pkg_Assemb_Maturity, 6), self.multiplier(PRQ_Pkg_Assemb_Finish, self.Pkg_Assemb_Maturity, 6), self.inventory_yield(self.Die_Architecture_Info_val, 0, 6)]
+            
+            output_dict = {'Milestone': Milestone, 'PO/ES0': PO, 'ES1': ES1, 'ES2': ES2, 'QS': QS, 'PRQ': PRQ, 'PRQ+1Q': PRQ_1Q}
+            result = pd.DataFrame(output_dict, columns=['Milestone', 'PO/ES0', 'ES1', 'ES2', 'QS', 'PRQ', 'PRQ+1Q'])
+            result = result.set_index('Milestone')
 
         self.lrp_output['Product_Name'] = product_name
         self.lrp_output['Skew_Name'] = skew_name
         self.lrp_output['Package_Type'] = pkg_class
+        self.lrp_output['Create_PQS'] = create_pqs_input
         self.lrp_output['Die_Architecture'] = Die_Architecture_Info_val
         self.lrp_output['WLA_Architecture_Maturity'] = WLA_Maturity
         self.lrp_output['Pkg_Assembly_Architecture_Maturity'] = Pkg_Assemb_Maturity

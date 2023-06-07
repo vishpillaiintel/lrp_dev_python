@@ -28,6 +28,13 @@ rot_config = {
         'Field_Selection': ['Client','Server','Beast (>>SPR-XCC)'],
         'Field_Required': 1
     },
+    'Create_PQS': {
+        'Field_ID': 6696295,
+        'Field_Type': str,
+        'Field_Question': 'Would you like to record PQS value?',
+        'Field_Selection': ['Yes','No'],
+        'Field_Required': 1
+    },
     'Number_of_Main_Die': {
         'Field_ID': 1524252,
         'Field_Type': int,
@@ -167,6 +174,13 @@ manual_entry_config = {
         'Field_Selection': ['Client','Server','Graphics','ASIC','PSG'],
         'Field_Required': 1
     },
+    'Create_PQS': {
+        'Field_ID': 3537833,
+        'Field_Type': str,
+        'Field_Question': 'Would you like to record a PQS value?',
+        'Field_Selection': ['Yes','No'],
+        'Field_Required': 1
+    },
     'Die_Architecture': {
         'Field_ID': 6360244,
         'Field_Type': str,
@@ -186,6 +200,49 @@ manual_entry_config = {
         'Field_Type': str,
         'Field_Question': 'Pkg Assembly Architecture Maturity',
         'Field_Selection': ['Evolutionary','Revolutionary'],
+        'Field_Required': 1
+    }
+}
+
+commit_config = {
+
+    'Product_Name': {
+        'Field_ID': 9804779,
+        'Field_Type': str,
+        'Field_Question': 'Product Name',
+        'Field_Required': 1
+    },
+    'Skew_Name': {
+        'Field_ID': 4377859,
+        'Field_Type': str,
+        'Field_Question': 'Need to specify Skew?',
+        'Field_Required': 1
+    },
+    'Package_Type': {
+        'Field_ID': 3109233,
+        'Field_Type': str,
+        'Field_Question': 'Package Type',
+        'Field_Selection': ['Client','Server','Graphics','ASIC','PSG'],
+        'Field_Required': 1
+    },
+    'Note': {
+        'Field_ID': 7006889,
+        'Field_Type': str,
+        'Field_Question': 'Optional Note',
+        'Field_Required': 1
+    },
+    'Exist_WLA': {
+        'Field_ID': 7421771,
+        'Field_Type': str,
+        'Field_Question': 'Does product have WLA?',
+        'Field_Selection': ['Yes','No'],
+        'Field_Required': 1
+    },
+    'Create_PQS': {
+        'Field_ID': 1327690,
+        'Field_Type': str,
+        'Field_Question': 'Would you like to record a PQS value?',
+        'Field_Selection': ['Yes','No'],
         'Field_Required': 1
     }
 }

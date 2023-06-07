@@ -4,6 +4,14 @@ import pandas as pd
 import numpy as np
 import datetime
 
+class Home_View:
+    def __init__(self):
+        pass
+
+    def view(self):
+        st.write("User info:", st.session_state.user_info)
+
+
 class LRP_View:
     
     def __init__(self, df):
@@ -134,6 +142,9 @@ class Data_Entry_View():
             package_type_estim_input = st.selectbox(label=self.de_model.submission.form.fields['Package_Type_Estimation']['Field_Question'], \
                                             options=self.de_model.submission.form.fields['Package_Type_Estimation']['Field_Selection'], key='package_type_estimation_rot', on_change=rerun)
             
+            create_pqs_input = st.selectbox(label=self.de_model.submission.form.fields['Create_PQS']['Field_Question'], \
+                                            options=self.de_model.submission.form.fields['Create_PQS']['Field_Selection'], key='create_pqs_rot', on_change=rerun)
+
             num_main = st.number_input(label=self.de_model.submission.form.fields['Number_of_Main_Die']['Field_Question'], \
                                         min_value=self.de_model.submission.form.fields['Number_of_Main_Die']['Min_Value'], \
                                         max_value=self.de_model.submission.form.fields['Number_of_Main_Die']['Max_Value'], \
@@ -195,7 +206,7 @@ class Data_Entry_View():
                                             wla_architect=wla_architect_input, dow_architect_input_val=dow_architect_input, \
                                             odi_chiplet_size=odi_chiplet_size_input, hbi_architect=hbi_architect_input, signal_area_hbi=signal_area_hbi,  \
                                             exist_hbm_input_val=exist_hbm, die_architect_input_val=die_architect_input, type_num_satellite_input_val=type_num_satellite, \
-                                            architecture_maturity_val=architecture_maturity_input)
+                                            architecture_maturity_val=architecture_maturity_input, create_pqs_input=create_pqs_input)
 
         st.divider()
         
@@ -254,7 +265,7 @@ class Data_Entry_View():
             self.de_model.submission.create_Form('Manual Entry')
             self.de_model.submission.form.set_Fields()
 
-            product_type_input = st.text_input(label=self.de_model.submission.form.fields['Product_Name']['Field_Question'], value='', key='product_name_me', on_change=rerun)
+            product_name_input = st.text_input(label=self.de_model.submission.form.fields['Product_Name']['Field_Question'], value='', key='product_name_me', on_change=rerun)
             
             optional_skew_checkbox_input = st.checkbox(label=self.de_model.submission.form.fields['Skew_Name']['Field_Question'], key='optional_skew_me', on_change=rerun)
 
@@ -266,6 +277,8 @@ class Data_Entry_View():
             package_type_input = st.selectbox(label=self.de_model.submission.form.fields['Package_Type']['Field_Question'], \
                                             options=self.de_model.submission.form.fields['Package_Type']['Field_Selection'], key='package_type_me', on_change=rerun)
 
+            create_pqs_input = st.selectbox(label=self.de_model.submission.form.fields['Create_PQS']['Field_Question'], \
+                                            options=self.de_model.submission.form.fields['Create_PQS']['Field_Selection'], key='create_pqs_me', on_change=rerun)
         with col2:
             st.write('**_Other Information_**')
             die_architect_input = st.selectbox(label=self.de_model.submission.form.fields['Die_Architecture']['Field_Question'], \
@@ -296,23 +309,23 @@ class Data_Entry_View():
                 prq_pkg_assemb_finish_input = st.number_input(label='PRQ Pkg Assemb Finish', min_value=0.0, max_value=100.0, value=99.0, step=0.1, format="%.2f", on_change=rerun)
         
         if die_architect_input == 'Foveros Client' or die_architect_input == 'Co-EMIB':
-            result, lrp_output = self.de_model.me_model.lrp_prediction(product_name=product_type_input, skew_name=skew_name_input, pkg_class=package_type_input, \
+            result, lrp_output = self.de_model.me_model.lrp_prediction(product_name=product_name_input, skew_name=skew_name_input, pkg_class=package_type_input, \
                                 Die_Architecture_Info_val=die_architect_input, WLA_Maturity=wla_arch_maturity_input, \
                                 Pkg_Assemb_Maturity=pkg_assemb_maturity_input, PRQ_WLA_RtD=prq_wla_rtd_input, \
                                 PRQ_WLA_Test_PIYL=prq_wla_test_input, PRQ_Pkg_Assemb_RtD=prq_pkg_assemb_rtd_input, \
-                                PRQ_Pkg_Test_PIYL=prq_pkg_test_piyl_input, PRQ_Pkg_Assemb_Finish=prq_pkg_assemb_finish_input)
+                                PRQ_Pkg_Test_PIYL=prq_pkg_test_piyl_input, PRQ_Pkg_Assemb_Finish=prq_pkg_assemb_finish_input, create_pqs_input=create_pqs_input)
         else:
-            result, lrp_output = self.de_model.me_model.lrp_prediction(product_name=product_type_input, skew_name=skew_name_input, pkg_class=package_type_input, \
+            result, lrp_output = self.de_model.me_model.lrp_prediction(product_name=product_name_input, skew_name=skew_name_input, pkg_class=package_type_input, \
                             Die_Architecture_Info_val=die_architect_input, WLA_Maturity=None, \
                             Pkg_Assemb_Maturity=pkg_assemb_maturity_input, PRQ_WLA_RtD=None, \
                             PRQ_WLA_Test_PIYL=None, PRQ_Pkg_Assemb_RtD=prq_pkg_assemb_rtd_input, \
-                            PRQ_Pkg_Test_PIYL=prq_pkg_test_piyl_input, PRQ_Pkg_Assemb_Finish=prq_pkg_assemb_finish_input)
+                            PRQ_Pkg_Test_PIYL=prq_pkg_test_piyl_input, PRQ_Pkg_Assemb_Finish=prq_pkg_assemb_finish_input, create_pqs_input=create_pqs_input)
         
         st.divider()
 
         if st.button('**Run Data Prediction**', key='run_prediction_me'):
             st.session_state['ME_Button'] = True
-            st.write(f'Product Name: {product_type_input} {skew_name_input}')
+            st.write(f'Product Name: {product_name_input} {skew_name_input}')
             st.write(f'Package Type: {package_type_input}')
             st.dataframe(result)
         
@@ -326,17 +339,262 @@ class Data_Entry_View():
                     st.write(record)
                 st.session_state['ME_Button'] = False
 
-    def view(self):
-        st.title("Data Entry")
-        rot, man_ent = st.tabs(["**:blue[RoT]**", "**:blue[Manual Entry]**"])
-
-        with rot:
-            self.rot_view()
     
-        with man_ent:
-            self.me_view()
+    def commit_view(self):
+        col1, col2, col3 = st.columns(3)
+        m=st.markdown("""
+                        <style>
+
+                        div.stTitle {
+
+                        font-size:0.5px;
+
+                        }
+
+                        div.stHeader {
+
+                        font-size:0.2px;
+
+                        }
+
+                        .stTabs [data-baseweb="tab-list"] button [data-testid="stMarkdownContainer"] p {
+                            font-size:1rem;
+                        }
+
+                        </style>
+                        """, unsafe_allow_html=True)
+        
+        if 'Commit_Button' not in st.session_state:
+            st.session_state['Commit_Button'] = False
+
+        def rerun():
+            st.session_state['Commit_Button'] = False
+        
+        with col1:
+
+            st.write('**_Product Information_**')
+            self.de_model.submission.create_Form('Commit')
+            self.de_model.submission.form.set_Fields()
+
+            product_name_input = st.text_input(label=self.de_model.submission.form.fields['Product_Name']['Field_Question'], value='', key='product_name_commit', on_change=rerun)
+            
+            optional_skew_checkbox_input = st.checkbox(label=self.de_model.submission.form.fields['Skew_Name']['Field_Question'], key='optional_skew_commit', on_change=rerun)
+
+            if optional_skew_checkbox_input:
+                skew_name_input = st.text_input(label='Skew Name', value='', key='skew_name_me', on_change=rerun)
+            else:
+                skew_name_input = ''
+
+        with col2:
+            package_type_input = st.selectbox(label=self.de_model.submission.form.fields['Package_Type']['Field_Question'], \
+                                            options=self.de_model.submission.form.fields['Package_Type']['Field_Selection'], key='package_type_commit', on_change=rerun)
+        
+            note_input = st.text_input(label=self.de_model.submission.form.fields['Note']['Field_Question'], value='', key='note_commit', on_change=rerun)
+
+        with col3:
+            exist_wla_input = st.selectbox(label=self.de_model.submission.form.fields['Exist_WLA']['Field_Question'], \
+                                            options=self.de_model.submission.form.fields['Exist_WLA']['Field_Selection'], key='exist_wla_commit', on_change=rerun)
+            
+            create_pqs_input = st.selectbox(label=self.de_model.submission.form.fields['Create_PQS']['Field_Question'], \
+                                            options=self.de_model.submission.form.fields['Create_PQS']['Field_Selection'], key='create_pqs_commit', on_change=rerun)
+        if create_pqs_input == 'Yes':
+            create_pqs_val = 1
+        else:
+            create_pqs_val = 0
+
+        with col1:
+            st.write('**_PIYL Table_**')
+            if exist_wla_input:
+                po_es0_wla_rtd = st.number_input(label='PO/ES0 WLA RtD', min_value=0.0, max_value=100.0, \
+                                                            value=99.0, step=0.1, format="%.2f", on_change=rerun, key='PO/ES0 WLA RtD_commit')
+                po_es0_wla_test_piyl = st.number_input(label='PO/ES0 WLA Test PIYL', min_value=0.0, max_value=100.0, \
+                                                    value=99.0, step=0.1, format="%.2f", on_change=rerun, key='PO/ES0 WLA Test PIYL_commit')
+                po_es0_wla_inv_yield = st.number_input(label='PO/ES0 WLA Inventory Yield', min_value=0.0, max_value=100.0, \
+                                                    value=99.0, step=0.1, format="%.2f", on_change=rerun, key='PO/ES0 WLA Inventory Yield_commit')
+            po_es0_pkg_assemb_rtd = st.number_input(label='PO/ES0 Pkg Assemb RtD', min_value=0.0, max_value=100.0, \
+                                                            value=99.0, step=0.1, format="%.2f", on_change=rerun, key='PO/ES0 Pkg Assemb RtD_commit')
+            po_es0_pkg_assemb_test_piyl = st.number_input(label='PO/ES0 Pkg Assemb Test PIYL', min_value=0.0, max_value=100.0, \
+                                                            value=99.0, step=0.1, format="%.2f", on_change=rerun, key='PO/ES0 Pkg Assemb Test PIYL_commit')
+            po_es0_pkg_assemb_finish = st.number_input(label='PO/ES0 Pkg Assemb Finish', min_value=0.0, max_value=100.0, \
+                                                value=99.0, step=0.1, format="%.2f", on_change=rerun, key='PO/ES0 Pkg Assemb Finish_commit')
+            po_es0_pkg_assemb_inv_yield = st.number_input(label='PO/ES0 Pkg Assemb Inventory Yield', min_value=0.0, max_value=100.0, \
+                                                value=99.0, step=0.1, format="%.2f", on_change=rerun, key='PO/ES0 Pkg Assemb Inventory Yield_commit')
+            
+            if exist_wla_input:
+                qs_wla_rtd = st.number_input(label='QS WLA RtD', min_value=0.0, max_value=100.0, \
+                                                            value=99.0, step=0.1, format="%.2f", on_change=rerun, key='QS WLA RtD_commit')
+                qs_wla_test_piyl = st.number_input(label='QS WLA Test PIYL', min_value=0.0, max_value=100.0, \
+                                                    value=99.0, step=0.1, format="%.2f", on_change=rerun, key='QS WLA Test PIYL_commit')
+                qs_wla_inv_yield = st.number_input(label='QS WLA Inventory Yield', min_value=0.0, max_value=100.0, \
+                                                    value=99.0, step=0.1, format="%.2f", on_change=rerun, key='QS WLA Inventory Yield_commit')
+            qs_pkg_assemb_rtd = st.number_input(label='QS Pkg Assemb RtD', min_value=0.0, max_value=100.0, \
+                                                            value=99.0, step=0.1, format="%.2f", on_change=rerun, key='QS Pkg Assemb RtD_commit')
+            qs_pkg_assemb_test_piyl = st.number_input(label='QS Pkg Assemb Test PIYL', min_value=0.0, max_value=100.0, \
+                                                            value=99.0, step=0.1, format="%.2f", on_change=rerun, key='QS Pkg Assemb Test PIYL_commit')
+            qs_pkg_assemb_finish = st.number_input(label='QS Pkg Assemb Finish', min_value=0.0, max_value=100.0, \
+                                                value=99.0, step=0.1, format="%.2f", on_change=rerun, key='QS Pkg Assemb Finish_commit')
+            qs_pkg_assemb_inv_yield = st.number_input(label='QS Pkg Assemb Inventory Yield', min_value=0.0, max_value=100.0, \
+                                                value=99.0, step=0.1, format="%.2f", on_change=rerun, key='QS Pkg Assemb Inventory Yield_commit')
+
+            if create_pqs_val:
+                if exist_wla_input:
+                    pqs_wla_rtd = st.number_input(label='PQS WLA RtD', min_value=0.0, max_value=100.0, \
+                                                                value=99.0, step=0.1, format="%.2f", on_change=rerun, key='PQS WLA RtD_commit')
+                    pqs_wla_test_piyl = st.number_input(label='PQS WLA Test PIYL', min_value=0.0, max_value=100.0, \
+                                                        value=99.0, step=0.1, format="%.2f", on_change=rerun, key='PQS WLA Test PIYL_commit')
+                    pqs_wla_inv_yield = st.number_input(label='PQS WLA Inventory Yield', min_value=0.0, max_value=100.0, \
+                                                        value=99.0, step=0.1, format="%.2f", on_change=rerun, key='PQS WLA Inventory Yield_commit')
+                pqs_pkg_assemb_rtd = st.number_input(label='PQS Pkg Assemb RtD', min_value=0.0, max_value=100.0, \
+                                                                value=99.0, step=0.1, format="%.2f", on_change=rerun, key='PQS Pkg Assemb RtD_commit')
+                pqs_pkg_assemb_test_piyl = st.number_input(label='PQS Pkg Assemb Test PIYL', min_value=0.0, max_value=100.0, \
+                                                                value=99.0, step=0.1, format="%.2f", on_change=rerun, key='PQS Pkg Assemb Test PIYL_commit')
+                pqs_pkg_assemb_finish = st.number_input(label='PQS Pkg Assemb Finish', min_value=0.0, max_value=100.0, \
+                                                    value=99.0, step=0.1, format="%.2f", on_change=rerun, key='PQS Pkg Assemb Finish_commit')
+                pqs_pkg_assemb_inv_yield = st.number_input(label='PQS Pkg Assemb Inventory Yield', min_value=0.0, max_value=100.0, \
+                                                    value=99.0, step=0.1, format="%.2f", on_change=rerun, key='PQS Pkg Assemb Inventory Yield_commit')
+                
+        with col2:
+            if exist_wla_input:
+                es1_wla_rtd = st.number_input(label='ES1 WLA RtD', min_value=0.0, max_value=100.0, \
+                                                            value=99.0, step=0.1, format="%.2f", on_change=rerun, key='ES1 WLA RtD_commit')
+                es1_wla_test_piyl = st.number_input(label='ES1 WLA Test PIYL', min_value=0.0, max_value=100.0, \
+                                                    value=99.0, step=0.1, format="%.2f", on_change=rerun, key='ES1 WLA Test PIYL_commit')
+                es1_wla_inv_yield = st.number_input(label='ES1 WLA Inventory Yield', min_value=0.0, max_value=100.0, \
+                                                    value=99.0, step=0.1, format="%.2f", on_change=rerun, key='ES1 WLA Inventory Yield_commit')
+            es1_pkg_assemb_rtd = st.number_input(label='ES1 Pkg Assemb RtD', min_value=0.0, max_value=100.0, \
+                                                            value=99.0, step=0.1, format="%.2f", on_change=rerun, key='ES1 Pkg Assemb RtD_commit')
+            es1_pkg_assemb_test_piyl = st.number_input(label='ES1 Pkg Assemb Test PIYL', min_value=0.0, max_value=100.0, \
+                                                            value=99.0, step=0.1, format="%.2f", on_change=rerun, key='ES1 Pkg Assemb Test PIYL_commit')
+            es1_pkg_assemb_finish = st.number_input(label='ES1 Pkg Assemb Finish', min_value=0.0, max_value=100.0, \
+                                                value=99.0, step=0.1, format="%.2f", on_change=rerun, key='ES1 Pkg Assemb Finish_commit')
+            es1_pkg_assemb_inv_yield = st.number_input(label='ES1 Pkg Assemb Inventory Yield', min_value=0.0, max_value=100.0, \
+                                                value=99.0, step=0.1, format="%.2f", on_change=rerun, key='ES1 Pkg Assemb Inventory Yield_commit')
+            
+            if exist_wla_input:
+                prq_wla_rtd = st.number_input(label='PRQ WLA RtD', min_value=0.0, max_value=100.0, \
+                                                            value=99.0, step=0.1, format="%.2f", on_change=rerun, key='PRQ WLA RtD_commit')
+                prq_wla_test_piyl = st.number_input(label='PRQ WLA Test PIYL', min_value=0.0, max_value=100.0, \
+                                                    value=99.0, step=0.1, format="%.2f", on_change=rerun, key='PRQ WLA Test PIYL_commit')
+                prq_wla_inv_yield = st.number_input(label='PRQ WLA Inventory Yield', min_value=0.0, max_value=100.0, \
+                                                    value=99.0, step=0.1, format="%.2f", on_change=rerun, key='PRQ WLA Inventory Yield_commit')
+            prq_pkg_assemb_rtd = st.number_input(label='PRQ Pkg Assemb RtD', min_value=0.0, max_value=100.0, \
+                                                            value=99.0, step=0.1, format="%.2f", on_change=rerun, key='PRQ Pkg Assemb RtD_commit')
+            prq_pkg_assemb_test_piyl = st.number_input(label='PRQ Pkg Assemb Test PIYL', min_value=0.0, max_value=100.0, \
+                                                            value=99.0, step=0.1, format="%.2f", on_change=rerun, key='PRQ Pkg Assemb Test PIYL_commit')
+            prq_pkg_assemb_finish = st.number_input(label='PRQ Pkg Assemb Finish', min_value=0.0, max_value=100.0, \
+                                                value=99.0, step=0.1, format="%.2f", on_change=rerun, key='PRQ Pkg Assemb Finish_commit')
+            prq_pkg_assemb_inv_yield = st.number_input(label='PRQ Pkg Assemb Inventory Yield', min_value=0.0, max_value=100.0, \
+                                                value=99.0, step=0.1, format="%.2f", on_change=rerun, key='PRQ Pkg Assemb Inventory Yield_commit')
+        
+        with col3:
+            if exist_wla_input:
+                es2_wla_rtd = st.number_input(label='ES2 WLA RtD', min_value=0.0, max_value=100.0, \
+                                                            value=99.0, step=0.1, format="%.2f", on_change=rerun, key='ES2 WLA RtD_commit')
+                es2_wla_test_piyl = st.number_input(label='ES2 WLA Test PIYL', min_value=0.0, max_value=100.0, \
+                                                    value=99.0, step=0.1, format="%.2f", on_change=rerun, key='ES2 WLA Test PIYL_commit')
+                es2_wla_inv_yield = st.number_input(label='ES2 WLA Inventory Yield', min_value=0.0, max_value=100.0, \
+                                                    value=99.0, step=0.1, format="%.2f", on_change=rerun, key='ES2 WLA Inventory Yield_commit')
+            es2_pkg_assemb_rtd = st.number_input(label='ES2 Pkg Assemb RtD', min_value=0.0, max_value=100.0, \
+                                                            value=99.0, step=0.1, format="%.2f", on_change=rerun, key='ES2 Pkg Assemb RtD_commit')
+            es2_pkg_assemb_test_piyl = st.number_input(label='ES2 Pkg Assemb Test PIYL', min_value=0.0, max_value=100.0, \
+                                                            value=99.0, step=0.1, format="%.2f", on_change=rerun, key='ES2 Pkg Assemb Test PIYL_commit')
+            es2_pkg_assemb_finish = st.number_input(label='ES2 Pkg Assemb Finish', min_value=0.0, max_value=100.0, \
+                                                value=99.0, step=0.1, format="%.2f", on_change=rerun, key='ES2 Pkg Assemb Finish_commit')
+            es2_pkg_assemb_inv_yield = st.number_input(label='ES2 Pkg Assemb Inventory Yield', min_value=0.0, max_value=100.0, \
+                                                value=99.0, step=0.1, format="%.2f", on_change=rerun, key='ES2 Pkg Assemb Inventory Yield_commit')
+            
+            if exist_wla_input:
+                prq_1q_wla_rtd = st.number_input(label='PRQ+1Q WLA RtD', min_value=0.0, max_value=100.0, \
+                                                            value=99.0, step=0.1, format="%.2f", on_change=rerun, key='PRQ+1Q WLA RtD_commit')
+                prq_1q_wla_test_piyl = st.number_input(label='PRQ+1Q WLA Test PIYL', min_value=0.0, max_value=100.0, \
+                                                    value=99.0, step=0.1, format="%.2f", on_change=rerun, key='PRQ+1Q WLA Test PIYL_commit')
+                prq_1q_wla_inv_yield = st.number_input(label='PRQ+1Q WLA Inventory Yield', min_value=0.0, max_value=100.0, \
+                                                    value=99.0, step=0.1, format="%.2f", on_change=rerun, key='PRQ+1Q WLA Inventory Yield_commit')
+            prq_1q_pkg_assemb_rtd = st.number_input(label='PRQ+1Q Pkg Assemb RtD', min_value=0.0, max_value=100.0, \
+                                                            value=99.0, step=0.1, format="%.2f", on_change=rerun, key='PRQ+1Q Pkg Assemb RtD_commit')
+            prq_1q_pkg_assemb_test_piyl = st.number_input(label='PRQ+1Q Pkg Assemb Test PIYL', min_value=0.0, max_value=100.0, \
+                                                            value=99.0, step=0.1, format="%.2f", on_change=rerun, key='PRQ+1Q Pkg Assemb Test PIYL_commit')
+            prq_1q_pkg_assemb_finish = st.number_input(label='PRQ+1Q Pkg Assemb Finish', min_value=0.0, max_value=100.0, \
+                                                value=99.0, step=0.1, format="%.2f", on_change=rerun, key='PRQ+1Q Pkg Assemb Finish_commit')
+            prq_1q_pkg_assemb_inv_yield = st.number_input(label='PRQ+1Q Pkg Assemb Inventory Yield', min_value=0.0, max_value=100.0, \
+                                                value=99.0, step=0.1, format="%.2f", on_change=rerun, key='PRQ+1Q Pkg Assemb Inventory Yield_commit')       
+
+        if create_pqs_val:
+            result = pd.DataFrame(columns = ['PO/ES0', 'ES1', 'ES2', 'PQS', 'QS', 'PRQ', 'PRQ+1Q'])
+            if exist_wla_input:
+                result.loc[len(result)] = [po_es0_wla_rtd, es1_wla_rtd, es2_wla_rtd, pqs_wla_rtd, qs_wla_rtd, prq_wla_rtd, prq_1q_wla_rtd]
+                result.loc[len(result)] = [po_es0_wla_test_piyl, es1_wla_test_piyl, es2_wla_test_piyl, pqs_wla_test_piyl, qs_wla_test_piyl, prq_wla_test_piyl, prq_1q_wla_test_piyl]
+                result.loc[len(result)] = [po_es0_wla_inv_yield, es1_wla_inv_yield, es2_wla_inv_yield, pqs_wla_inv_yield, qs_wla_inv_yield, prq_wla_inv_yield, prq_1q_wla_inv_yield]
+                result.loc[len(result)] = [po_es0_pkg_assemb_rtd, es1_pkg_assemb_rtd, es2_pkg_assemb_rtd, pqs_pkg_assemb_rtd, qs_pkg_assemb_rtd, prq_pkg_assemb_rtd, prq_1q_pkg_assemb_rtd]
+                result.loc[len(result)] = [po_es0_pkg_assemb_test_piyl, es1_pkg_assemb_test_piyl, es2_pkg_assemb_test_piyl, pqs_pkg_assemb_test_piyl, qs_pkg_assemb_test_piyl, prq_pkg_assemb_test_piyl, prq_1q_pkg_assemb_test_piyl]
+                result.loc[len(result)] = [po_es0_pkg_assemb_finish, es1_pkg_assemb_finish, es2_pkg_assemb_finish, pqs_pkg_assemb_finish, qs_pkg_assemb_finish, prq_pkg_assemb_finish, prq_1q_pkg_assemb_finish]
+                result.loc[len(result)] = [po_es0_pkg_assemb_inv_yield, es1_pkg_assemb_inv_yield, es2_pkg_assemb_inv_yield, pqs_pkg_assemb_inv_yield, qs_pkg_assemb_inv_yield, prq_pkg_assemb_inv_yield, prq_1q_pkg_assemb_inv_yield]
+                result.index = ["WLA RtD", "WLA Test PIYL", "WLA Inventory Yield", "Pkg Assemb RtD", "Pkg Assemb Test PIYL", "Pkg Assemb Finish", "Pkg Assemb Inventory Yield"]
+
+            else:
+                result.loc[len(result)] = [po_es0_pkg_assemb_rtd, es1_pkg_assemb_rtd, es2_pkg_assemb_rtd, pqs_pkg_assemb_rtd, qs_pkg_assemb_rtd, prq_pkg_assemb_rtd, prq_1q_pkg_assemb_rtd]
+                result.loc[len(result)] = [po_es0_pkg_assemb_test_piyl, es1_pkg_assemb_test_piyl, es2_pkg_assemb_test_piyl, pqs_pkg_assemb_test_piyl, qs_pkg_assemb_test_piyl, prq_pkg_assemb_test_piyl, prq_1q_pkg_assemb_test_piyl]
+                result.loc[len(result)] = [po_es0_pkg_assemb_finish, es1_pkg_assemb_finish, es2_pkg_assemb_finish, pqs_pkg_assemb_finish, qs_pkg_assemb_finish, prq_pkg_assemb_finish, prq_1q_pkg_assemb_finish]
+                result.loc[len(result)] = [po_es0_pkg_assemb_inv_yield, es1_pkg_assemb_inv_yield, es2_pkg_assemb_inv_yield, pqs_pkg_assemb_inv_yield, qs_pkg_assemb_inv_yield, prq_pkg_assemb_inv_yield, prq_1q_pkg_assemb_inv_yield]
+                result.index = ["Pkg Assemb RtD", "Pkg Assemb Test PIYL", "Pkg Assemb Finish", "Pkg Assemb Inventory Yield"]
+        else:
+            result = pd.DataFrame(columns = ['PO/ES0', 'ES1', 'ES2', 'QS', 'PRQ', 'PRQ+1Q'])
+            if exist_wla_input:
+                result.loc[len(result)] = [po_es0_wla_rtd, es1_wla_rtd, es2_wla_rtd, qs_wla_rtd, prq_wla_rtd, prq_1q_wla_rtd]
+                result.loc[len(result)] = [po_es0_wla_test_piyl, es1_wla_test_piyl, es2_wla_test_piyl, qs_wla_test_piyl, prq_wla_test_piyl, prq_1q_wla_test_piyl]
+                result.loc[len(result)] = [po_es0_wla_inv_yield, es1_wla_inv_yield, es2_wla_inv_yield, qs_wla_inv_yield, prq_wla_inv_yield, prq_1q_wla_inv_yield]
+                result.loc[len(result)] = [po_es0_pkg_assemb_rtd, es1_pkg_assemb_rtd, es2_pkg_assemb_rtd, qs_pkg_assemb_rtd, prq_pkg_assemb_rtd, prq_1q_pkg_assemb_rtd]
+                result.loc[len(result)] = [po_es0_pkg_assemb_test_piyl, es1_pkg_assemb_test_piyl, es2_pkg_assemb_test_piyl, qs_pkg_assemb_test_piyl, prq_pkg_assemb_test_piyl, prq_1q_pkg_assemb_test_piyl]
+                result.loc[len(result)] = [po_es0_pkg_assemb_finish, es1_pkg_assemb_finish, es2_pkg_assemb_finish, qs_pkg_assemb_finish, prq_pkg_assemb_finish, prq_1q_pkg_assemb_finish]
+                result.loc[len(result)] = [po_es0_pkg_assemb_inv_yield, es1_pkg_assemb_inv_yield, es2_pkg_assemb_inv_yield, qs_pkg_assemb_inv_yield, prq_pkg_assemb_inv_yield, prq_1q_pkg_assemb_inv_yield]
+                result.index = ["WLA RtD", "WLA Test PIYL", "WLA Inventory Yield", "Pkg Assemb RtD", "Pkg Assemb Test PIYL", "Pkg Assemb Finish", "Pkg Assemb Inventory Yield"]
+
+            else:
+                result.loc[len(result)] = [po_es0_pkg_assemb_rtd, es1_pkg_assemb_rtd, es2_pkg_assemb_rtd, qs_pkg_assemb_rtd, prq_pkg_assemb_rtd, prq_1q_pkg_assemb_rtd]
+                result.loc[len(result)] = [po_es0_pkg_assemb_test_piyl, es1_pkg_assemb_test_piyl, es2_pkg_assemb_test_piyl, qs_pkg_assemb_test_piyl, prq_pkg_assemb_test_piyl, prq_1q_pkg_assemb_test_piyl]
+                result.loc[len(result)] = [po_es0_pkg_assemb_finish, es1_pkg_assemb_finish, es2_pkg_assemb_finish, qs_pkg_assemb_finish, prq_pkg_assemb_finish, prq_1q_pkg_assemb_finish]
+                result.loc[len(result)] = [po_es0_pkg_assemb_inv_yield, es1_pkg_assemb_inv_yield, es2_pkg_assemb_inv_yield, qs_pkg_assemb_inv_yield, prq_pkg_assemb_inv_yield, prq_1q_pkg_assemb_inv_yield]
+                result.index = ["Pkg Assemb RtD", "Pkg Assemb Test PIYL", "Pkg Assemb Finish", "Pkg Assemb Inventory Yield"]           
+        
+        st.divider()
+        
+        lrp_result, lrp_output = self.de_model.commit_model.create_LRP(product_name=product_name_input, skew_name=skew_name_input, \
+                                                                package_type=package_type_input, note=note_input, create_pqs=create_pqs_input, \
+                                                               result=result, exist_wla=exist_wla_input)
+
+        if st.button('**Run Data Prediction**', key='run_prediction_commit'):
+            st.session_state['Commit_Button'] = True
+            st.write(f'Product Name: {product_name_input} {skew_name_input}')
+            st.write(f'Package Type: {package_type_input}')
+            st.dataframe(lrp_result)
+        
+        if st.session_state['Commit_Button']:
+            if st.button('**Submit to Database?**', key='submit_database_me'):
+                with st.spinner('Writing to Database...'):
+                    user_id='vpillai'
+                    field_values_dict = lrp_output
+                    self.de_model.submission.set_Submission_Attributes(user_id=user_id, field_values_dict=field_values_dict)
+                    record = self.de_model.submission.publish_Submission()
+                    st.write(record)
+                st.session_state['Commit_Button'] = False
 
 
+    def view(self):
+        if ('SUBMITTER' not in st.session_state.user_info["roles"]) and ('APPROVER' not in st.session_state.user_info["roles"]):
+            st.title('**:red[Authorization Unsuccessful]**')
+            st.write(':pushpin: :red[For access, apply to the AGS role: **_ATTD Assembly Yield Projection LRP - Submitter on AZAD-CORP_**.]')
+        else:
+            st.title("Data Entry")
+            rot, man_ent, commit = st.tabs(["**:blue[RoT]**", "**:blue[Manual Entry]**",  "**:blue[Commit]**"])
+
+            with rot:
+                self.rot_view()
+        
+            with man_ent:
+                self.me_view()
+
+            with commit:
+                self.commit_view()
 
 class Data_Review_View():
     
@@ -352,13 +610,13 @@ class Data_Review_View():
         return self.pending_options
 
     def breakout_tables(self):
-
+        
         if 'RoT' in self.dr_model.submission_review.form.form_name:
             product_keys = ['Product_Name', 'Skew_Name', 'Package_Type', 'Package_Type_Estimation']
             general_keys = ['Number_of_Main_Die', 'Exist_EMIB', 'Exist_POINT']
             wla_keys = ['WLA_Architecture', 'Number_of_Chiplet_Base_Die', 'DoW_Architecture', \
                         'ODI_Chiplet_Size', 'HBI_Architecture', 'Signal_Area']
-            other_keys = ['Die_Architecture_Summary', 'Number_of_Satellite_Die', 'Exist_HBM', \
+            other_keys = ['Create_PQS','Die_Architecture_Summary', 'Number_of_Satellite_Die', 'Exist_HBM', \
                           'Lifetime_Volume', 'Architecture_Maturity']
             product_series = pd.Series(data=[self.dr_model.submission_review.field_values_dict[key] for key in product_keys], \
                                        index=product_keys, name='Value')
@@ -374,9 +632,9 @@ class Data_Review_View():
                 is_wla = 1
             output = {'Product Information': product_series, 'General Information': general_series, 'Other Information': other_series, \
                     'WLA Information': wla_series}
-        else:
+        elif 'Manual' in self.dr_model.submission_review.form.form_name:
             product_keys = ['Product_Name', 'Skew_Name', 'Package_Type']
-            other_keys = ['Die_Architecture', 'WLA_Architecture_Maturity', 'Pkg_Assembly_Architecture_Maturity']
+            other_keys = ['Create_PQS','Die_Architecture', 'WLA_Architecture_Maturity', 'Pkg_Assembly_Architecture_Maturity']
             product_series = pd.Series(data=[self.dr_model.submission_review.field_values_dict[key] for key in product_keys], \
                                        index=product_keys, name='Value')
             other_series = pd.Series(data=[self.dr_model.submission_review.field_values_dict[key] for key in other_keys], \
@@ -387,13 +645,28 @@ class Data_Review_View():
             else:
                 is_wla = 1
             output = {'Product Information': product_series, 'Other Information': other_series}
- 
-        if is_wla:
-            prq_columns = ['PO/ES0', 'ES1', 'ES2', 'QS', 'PRQ', 'PRQ+1Q']
-            prq_index = ["WLA RtD", "WLA Test PIYL", "WLA Inventory Yield", "Pkg Assemb RtD", "Pkg Assemb Test PIYL", "Pkg Assemb Finish", "Pkg Assemb Inventory Yield"]
-            prq_table = pd.DataFrame(columns = prq_columns, index = prq_index)
+        
+        elif 'Commit' in self.dr_model.submission_review.form.form_name:
+            product_keys = ['Product_Name', 'Skew_Name', 'Package_Type']
+            product_series = pd.Series(data=[self.dr_model.submission_review.field_values_dict[key] for key in product_keys], \
+                                       index=product_keys, name='Value')
+            other_keys = ['Note', 'Exist_WLA', 'Create_PQS']
+            other_series = pd.Series(data=[self.dr_model.submission_review.field_values_dict[key] for key in other_keys], \
+                            index=other_keys, name='Value')
+            if (self.dr_model.submission_review.field_values_dict['Exist_WLA'] == 'No'):
+                is_wla = 0
+            else:
+                is_wla = 1
             
-            prq_columns = ['PO/ES0', 'ES1', 'ES2', 'QS', 'PRQ', 'PRQ+1Q']
+            output = {'Product Information': product_series, 'Other Information': other_series}
+
+      
+        if is_wla:
+            if self.dr_model.submission_review.field_values_dict['Create_PQS'] == 'Yes':
+                prq_columns = ['PO/ES0', 'ES1', 'ES2', 'PQS', 'QS', 'PRQ', 'PRQ+1Q']
+            else:
+                prq_columns = ['PO/ES0', 'ES1', 'ES2', 'QS', 'PRQ', 'PRQ+1Q']
+
             prq_index = ["WLA RtD", "WLA Test PIYL", "WLA Inventory Yield", "Pkg Assemb RtD", "Pkg Assemb Test PIYL", "Pkg Assemb Finish", "Pkg Assemb Inventory Yield"]
             prq_table = pd.DataFrame(columns = prq_columns, index = prq_index)
             for prq_ind in prq_index:
@@ -403,11 +676,10 @@ class Data_Review_View():
                     row.append(self.dr_model.submission_review.field_values_dict[str_key])
                 prq_table.loc[prq_ind] = row
         else:
-            prq_columns = ['PO/ES0', 'ES1', 'ES2', 'QS', 'PRQ', 'PRQ+1Q']
-            prq_index = ["Pkg Assemb RtD", "Pkg Assemb Test PIYL", "Pkg Assemb Finish", "Pkg Assemb Inventory Yield"]
-            prq_table = pd.DataFrame(columns = prq_columns, index = prq_index)
-            
-            prq_columns = ['PO/ES0', 'ES1', 'ES2', 'QS', 'PRQ', 'PRQ+1Q']
+            if self.dr_model.submission_review.field_values_dict['Create_PQS'] == 'Yes':
+                prq_columns = ['PO/ES0', 'ES1', 'ES2', 'PQS', 'QS', 'PRQ', 'PRQ+1Q']
+            else:
+                prq_columns = ['PO/ES0', 'ES1', 'ES2', 'QS', 'PRQ', 'PRQ+1Q']
             prq_index = ["Pkg Assemb RtD", "Pkg Assemb Test PIYL", "Pkg Assemb Finish", "Pkg Assemb Inventory Yield"]
             prq_table = pd.DataFrame(columns = prq_columns, index = prq_index)
             for prq_ind in prq_index:
@@ -713,7 +985,8 @@ class Resubmission_View():
                             st.write(record)
                             st.session_state['get_sub_rej_key'] = False
                             st.session_state['RoT_RS_Button'] = False
-            else:
+
+            elif 'Manual' in self.rs_model.submission_resubmit.form.form_name:
                 
                 if 'ME_RS_Button' not in st.session_state:
                     st.session_state['ME_RS_Button'] = False
