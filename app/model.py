@@ -1,5 +1,6 @@
 from operator import index
 import os
+import streamlit as st
 import pandas as pd
 import numpy as np
 import mysql.connector
@@ -66,8 +67,8 @@ class LRP_Model:
             table_choice = ''
 
         sql = f"""
-        SELECT a.ApprovalID, a.ApproverID, fs.SubmissionID, fs.FormID, f.FormName, 
-            fs.SubmissionDate, fs.UserID, sf.FieldValue
+        SELECT a.ApprovalID, a.Approver, a.ApproverEmail, fs.SubmissionID, fs.FormID, f.FormName, 
+            fs.SubmissionDate, fs.User, fs.UserEmail, sf.FieldValue
             FROM Form_Submissions{table_choice} fs
         LEFT JOIN Approvals{table_choice} a on a.SubmissionID
         LEFT JOIN Submission_Fields{table_choice} sf on fs.SubmissionID
@@ -84,10 +85,12 @@ class LRP_Model:
             approv = Approval(mode=self.mode)
             approv.approval_id = a.ApprovalID 
             approv.submission_id = a.SubmissionID
-            approv.approver_id = a.ApproverID
+            approv.approver = a.Approver
+            approv.approver_email = a.ApproverEmail
             approv.retrieve_Form(form_name=a.FormName, form_id=a.FormID)
             approv.submission_date = a.SubmissionDate
-            approv.user_id = a.UserID
+            approv.user = a.User
+            approv.user_email = a.UserEmail
             approv.field_values_db = a.FieldValue
             approv.parse_FieldValues_db()
             approvals.append(approv)
@@ -196,7 +199,7 @@ class Data_Review_Model():
         pending = 'Pending'
         sql = f"""
             SELECT fs.SubmissionID, fs.FormID, f.FormName, 
-                fs.SubmissionDate, fs.SubmissionStatus, fs.UserID, sf.FieldValue
+                fs.SubmissionDate, fs.SubmissionStatus, fs.User, fs.UserEmail, sf.FieldValue
             FROM Form_Submissions{table_choice} fs
             LEFT JOIN Submission_Fields{table_choice} sf on fs.SubmissionID
             LEFT JOIN Forms{table_choice} f on f.FormID = fs.FormID
@@ -212,7 +215,8 @@ class Data_Review_Model():
             submission.retrieve_Form(form_name=a.FormName, form_id=a.FormID)
             submission.submission_date = a.SubmissionDate
             submission.submission_status = a.SubmissionStatus
-            submission.user_id = a.UserID
+            submission.user = a.User
+            submission.user_email = a.UserEmail
             submission.submission_id = a.SubmissionID
             submission.field_values_db = a.FieldValue
             submissions.append(submission)
@@ -226,10 +230,9 @@ class Data_Review_Model():
                 self.submission_review.parse_FieldValues_db()
                 return
     
-    def create_Approval(self, user_id, field_values_dict):
+    def create_Approval(self, field_values_dict):
         new_approval = Approval(mode=self.mode)
-        new_approval.set_Approval_Attributes(submission_id=self.submission_review.submission_id, \
-                                            user_id=user_id)
+        new_approval.set_Approval_Attributes(submission_id=self.submission_review.submission_id)
         record = new_approval.publish_Approval(field_values_dict)
         return record
 
@@ -248,7 +251,9 @@ class Resubmission_Model():
         self.rejected_submissions = []
         self.mode = mode
 
-    def get_Rejected_Submissions(self, user_id):
+    def get_Rejected_Submissions(self):
+
+        user = st.session_state.user_info['displayName']
 
         if self.mode == 'dev':
             table_choice = '_dev'
@@ -258,13 +263,13 @@ class Resubmission_Model():
         rejected = 'Rejected'
         sql = f"""
             SELECT fs.SubmissionID, fs.FormID, f.FormName, 
-                fs.SubmissionDate, fs.SubmissionStatus, fs.UserID, sf.FieldValue
+                fs.SubmissionDate, fs.SubmissionStatus, fs.User, fs.UserEmail, sf.FieldValue
                 FROM Form_Submissions{table_choice} fs
             LEFT JOIN Submission_Fields{table_choice} sf on fs.SubmissionID
             LEFT JOIN Forms{table_choice} f on f.FormID = fs.FormID
                 WHERE fs.SubmissionID = sf.SubmissionID
                 AND fs.SubmissionStatus = '{rejected}'
-                AND fs.UserID = '{user_id}'
+                AND fs.User = '{user}'
         """
 
         with Database(self.db_config) as db_conn:
@@ -276,7 +281,8 @@ class Resubmission_Model():
             submission.retrieve_Form(form_name=a.FormName, form_id=a.FormID)
             submission.submission_date = a.SubmissionDate
             submission.submission_status = a.SubmissionStatus
-            submission.user_id = a.UserID
+            submission.user = a.User
+            submission.user_email = a.UserEmail
             submission.submission_id = a.SubmissionID
             submission.field_values_db = a.FieldValue
             submissions.append(submission)
@@ -295,7 +301,8 @@ class Submission():
         self.field_values_dict = None
         self.field_values_db = None
         self.form = None
-        self.user_id = None
+        self.user = None
+        self.user_email = None
         self.submission_status = None
         self.submission_date = None
         self.submission_id = None
@@ -308,11 +315,12 @@ class Submission():
         }
         self.mode = mode
 
-    def set_Submission_Attributes(self, user_id, field_values_dict):
+    def set_Submission_Attributes(self, field_values_dict):
 
         self.field_values_dict = field_values_dict
         self.create_FieldValues_db()
-        self.user_id = user_id
+        self.user = st.session_state.user_info['displayName']
+        self.user_email = st.session_state.user_info['mail']
         self.submission_status = 'Pending'
         self.set_Submission_ID()
         self.submission_date = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
@@ -361,8 +369,8 @@ class Submission():
         with Database(self.db_config) as db_conn:
             mycursor = db_conn.db_cursor
             table = 'Form_Submissions' + table_choice
-            sql = f"INSERT INTO {table} (SubmissionID, UserID, SubmissionDate, SubmissionStatus, FormID) VALUES (%s, %s, %s, %s, %s)"
-            val = (str(self.submission_id), str(self.user_id), str(self.submission_date), str(self.submission_status), str(self.form.form_id))
+            sql = f"INSERT INTO {table} (SubmissionID, User, UserEmail, SubmissionDate, SubmissionStatus, FormID) VALUES (%s, %s, %s, %s, %s, %s)"
+            val = (str(self.submission_id), str(self.user), str(self.user_email), str(self.submission_date), str(self.submission_status), str(self.form.form_id))
             mycursor.execute(sql, val)
             db_conn.db_conn.commit()
             output_record+=f'{mycursor.rowcount} record inserted into {table}.\n'
@@ -440,7 +448,7 @@ class Submission():
         self.submission_id = id
         sql = f"""
             SELECT fs.SubmissionID, fs.FormID, f.FormName, 
-            fs.SubmissionDate, fs.SubmissionStatus, fs.UserID, sf.FieldValue
+            fs.SubmissionDate, fs.SubmissionStatus, fs.User, fs.UserEmail, sf.FieldValue
             FROM Form_Submissions{table_choice} fs
             LEFT JOIN Submission_Fields{table_choice} sf on fs.SubmissionID
             LEFT JOIN Forms{table_choice} f on f.FormID = fs.FormID
@@ -453,7 +461,8 @@ class Submission():
         self.retrieve_Form(form_name=df['FormName'], form_id=df['FormID'])
         self.submission_date = df['SubmissionDate']
         self.submission_status = df['SubmissionStatus'] 
-        self.user_id = df['UserID']
+        self.user = df['User']
+        self.user_email = df['UserEmail']
         self.field_values_db = df['FieldValue'][0]
         self.parse_FieldValues_db()
 
@@ -494,13 +503,15 @@ class Approval(Submission):
         }
         self.approval_date = None
         self.approval_id = None
-        self.approver_id = None
+        self.approver = None
+        self.approver_email = None
         self.submission_id = None
         self.mode = mode
         
-    def set_Approval_Attributes(self, submission_id, user_id):
-        # set Approval info given submission_id and user_id (approver/admin)
-        self.approver_id = user_id
+    def set_Approval_Attributes(self, submission_id):
+        # set Approval info given submission_id and user (approver/admin)
+        self.approver = st.session_state.user_info['displayName']
+        self.approver_email = st.session_state.user_info['mail']
         self.set_Approval_ID()
         self.approval_date = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
         self.retrieve_Submission_Attributes(submission_id)
@@ -547,8 +558,8 @@ class Approval(Submission):
         with Database(self.db_config) as db_conn:
             mycursor = db_conn.db_cursor
             table = 'Approvals' + table_choice
-            sql = f"INSERT INTO {table} (ApprovalID, ApproverID, ApprovalDate, SubmissionID) VALUES (%s, %s, %s, %s)"
-            val = (str(self.approval_id), str(self.approver_id), str(self.approval_date), str(self.submission_id))
+            sql = f"INSERT INTO {table} (ApprovalID, Approver, ApproverEmail, ApprovalDate, SubmissionID) VALUES (%s, %s, %s, %s, %s)"
+            val = (str(self.approval_id), str(self.approver), str(self.approver_email), str(self.approval_date), str(self.submission_id))
             mycursor.execute(sql, val)
             db_conn.db_conn.commit()
             output_record += f'{mycursor.rowcount} record inserted into {table}.'

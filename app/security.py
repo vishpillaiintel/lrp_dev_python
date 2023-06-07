@@ -2,6 +2,11 @@ import streamlit as st
 import msal
 import requests
 
+# AGS Roles
+AGS_VIEWER = 'LRPVIEWER'
+AGS_APPROVER = 'APPROVER'
+AGS_SUBMITTER = 'SUBMITTER'
+
 # Replace with your own values
 CLIENT_ID = '6009117b-d0ce-4267-baec-a7b18a9f59be'
 CLIENT_SECRET = '3ii8Q~Atz-MXcfDiQ~EgixN.m8ljSdgtopc2Adn2' 

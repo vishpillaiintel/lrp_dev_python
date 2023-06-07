@@ -26,6 +26,7 @@ def setup_page():
         st.write("Please sign-in to use this app.")
         auth_url = security.get_auth_url()
         st.markdown(f"<a href='{auth_url}' target='_self'>Sign In</a>", unsafe_allow_html=True)
+        #security.get_auth_url()
         st.stop()
 
 
